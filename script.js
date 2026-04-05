@@ -202,10 +202,40 @@ const UI = {
     showContextMenu(x, y, el) {
         State.contextTargetId = el.id;
         this.menu.style.display = 'block';
-        this.menu.style.left = x + 'px'; this.menu.style.top = y + 'px';
+        this.menu.style.left = x + 'px'; 
+        this.menu.style.top = y + 'px';
+
+        // Identificamos qué tipo de nodo es
         const isNil = el.classList.contains('nil-node');
+        const isPtr = el.classList.contains('ptr-circle');
         const isDouble = el.classList.contains('node-double');
-        document.getElementById('m-con-next').style.display = isNil ? 'none' : 'block';
+
+        // Referencias a los botones del menú
+        const btnNext = document.getElementById('m-con-next');
+        const btnDis = document.getElementById('m-dis');
+
+        // --- LÓGICA DE TEXTO PERSONALIZADO ---
+
+        if (isPtr) {
+            // Si es un PUNTERO
+            btnNext.innerText = "Realizar Conexión";
+            btnNext.style.display = "block";
+            btnDis.style.display = "block"; // Permite limpiar su flecha
+        } else if (isNil) {
+            // Si es un NIL
+            btnNext.style.display = "none"; // NIL no tiene salida
+            btnDis.style.display = "none";  // NIL no tiene salidas que limpiar
+        } else {
+            // Si es un NODO (Simple o Doble)
+            btnNext.innerText = "Conectar Próximo (Derecha)";
+            btnNext.style.display = "block";
+            btnDis.style.display = "block";
+        }
+
+        // El botón de eliminar siempre se llama "Eliminar Elemento"
+        document.getElementById('m-del').innerText = "Eliminar Elemento";
+
+        // Mostrar/Ocultar Conectar Anterior (solo para listas dobles)
         document.getElementById('m-con-prev').style.display = isDouble ? 'block' : 'none';
     }
 };
