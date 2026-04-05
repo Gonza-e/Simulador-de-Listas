@@ -62,9 +62,39 @@ button { padding: 8px 16px; color: white; border: none; border-radius: 6px; curs
 .data-core { flex: 2; background: var(--node-data-bg); color: var(--node-data-border); border: 2px dashed var(--node-data-border); display: flex; align-items: center; justify-content: center; font-weight: bold; }
 .ptr-dot { width: 10px; height: 10px; background: var(--ptr-border); border-radius: 50%; }
 
-.ptr-circle, .nil-node { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-.ptr-circle { background: var(--ptr-bg); border: 2px dashed var(--ptr-border); color: var(--ptr-border); }
-.nil-node { width: 45px; height: 45px; background: var(--nil-bg); border: 2px dashed var(--nil-border); color: var(--nil-border); font-size: 22px; }
+/* Estilo base compartido */
+.ptr-circle, .nil-node { 
+    height: 50px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    font-weight: bold; 
+    transition: all 0.2s ease;
+}
+
+/* Puntero Dinámico: Se expande con el texto */
+.ptr-circle { 
+    min-width: 50px; /* Tamaño mínimo para que parezca un círculo con 1 letra */
+    width: auto;     /* Permite que crezca */
+    padding: 0 15px; /* Espacio interno para que el texto no toque los bordes */
+    border-radius: 25px; /* Radio alto para mantener los bordes redondeados (forma de cápsula) */
+    background: var(--ptr-bg); 
+    border: 2px dashed var(--ptr-border); 
+    color: var(--ptr-border);
+    white-space: nowrap; /* Evita que el texto se baje a otra línea */
+    box-sizing: border-box;
+}
+
+/* Nodo NIL: Mantiene su forma fija */
+.nil-node { 
+    width: 45px; 
+    height: 45px; 
+    border-radius: 50%;
+    background: var(--nil-bg); 
+    border: 2px dashed var(--nil-border); 
+    color: var(--nil-border); 
+    font-size: 22px; 
+}
 
 #svg-layer { position: absolute; top: -5000px; left: -5000px; width: 15000px; height: 15000px; pointer-events: none; z-index: 5; }
 

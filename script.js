@@ -102,7 +102,7 @@ const Nodes = {
             w = 200; div.className = 'element node-double';
             div.innerHTML = `<div class="side-ptr" style="border-right:none; border-radius:8px 0 0 8px"><div class="ptr-dot"></div></div><div class="data-core" style="border-right:none;">${val}</div><div class="side-ptr" style="border-radius:0 8px 8px 0"><div class="ptr-dot"></div></div>`;
         } else if (type === 'ptr') {
-            w = 50; h = 50; div.className = 'element ptr-circle'; div.innerText = val[0] || 'P';
+            w = 50; h = 50; div.className = 'element ptr-circle'; div.innerText = val || 'P';
         } else if (type === 'nil') {
             w = 45; h = 45; div.className = 'element nil-node'; div.innerText = '=';
         }
