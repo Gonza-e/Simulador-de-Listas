@@ -60,11 +60,11 @@ const Renderer = {
     },
 
     getIntersection(sx, sy, el) {
-        const rect = {
-            left: el.offsetLeft + State.OFFSET,
-            top: el.offsetTop + State.OFFSET,
-            w: el.offsetWidth,
-            h: el.offsetHeight
+        const r = { 
+            l: el.offsetLeft + State.OFFSET, 
+            t: el.offsetTop + State.OFFSET, 
+            w: el.offsetWidth, // <--- Esto lee el ancho real actual
+            h: el.offsetHeight 
         };
         const cx = rect.left + rect.w / 2;
         const cy = rect.top + rect.h / 2;
@@ -148,12 +148,16 @@ const UI = {
     init() {
         window.onmousemove = (e) => {
             if (State.isPanning) {
-                State.worldX += e.movementX; State.worldY += e.movementY;
+                State.worldX += e.movementX; 
+                State.worldY += e.movementY;
                 document.getElementById('world').style.transform = `translate(${State.worldX}px, ${State.worldY}px)`;
             } else if (State.currentDrag) {
+                // Movimiento directo
                 State.currentDrag.style.left = (e.clientX - State.worldX - State.currentDrag.ox) + 'px';
                 State.currentDrag.style.top = (e.clientY - State.worldY - State.currentDrag.oy) + 'px';
-                Renderer.update();
+                
+                // Forzar actualización inmediata de las flechas
+                requestAnimationFrame(() => Renderer.update()); 
             }
         };
         window.onmouseup = () => { State.isPanning = false; State.currentDrag = null; };

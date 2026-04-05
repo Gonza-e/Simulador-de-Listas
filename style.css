@@ -74,15 +74,24 @@ button { padding: 8px 16px; color: white; border: none; border-radius: 6px; curs
 
 /* Puntero Dinámico: Se expande con el texto */
 .ptr-circle { 
-    min-width: 50px; /* Tamaño mínimo para que parezca un círculo con 1 letra */
-    width: auto;     /* Permite que crezca */
-    padding: 0 15px; /* Espacio interno para que el texto no toque los bordes */
-    border-radius: 25px; /* Radio alto para mantener los bordes redondeados (forma de cápsula) */
+    min-width: 50px;
+    width: fit-content; /* Cambiado de auto a fit-content */
+    height: 50px; 
+    padding: 0 15px; 
+    border-radius: 25px; 
     background: var(--ptr-bg); 
-    border: 2px dashed var(--ptr-border); 
-    color: var(--ptr-border);
-    white-space: nowrap; /* Evita que el texto se baje a otra línea */
+    border: 2px dashed var(--ptr-border);
+    color: var(--ptr-border); 
+    font-weight: bold; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    white-space: nowrap; 
     box-sizing: border-box;
+    /* --- FIX PARA EL DELAY --- */
+    transition: none !important; /* Eliminamos transiciones que causan lag al mover */
+    contain: layout;             /* Optimiza el renderizado */
+    will-change: left, top;      /* Prepara a la GPU para el movimiento */
 }
 
 /* Nodo NIL: Mantiene su forma fija */
