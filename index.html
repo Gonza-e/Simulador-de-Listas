@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estructuras de Datos - Vista Dinámica</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="mode-selector">
+        <h1>Selecciona Tipo de Estructura</h1>
+        <div class="menu-container">
+            <div class="menu-card" onclick="App.start('simple')">
+                <h2>Nodo Simple</h2>
+                <p>Estructuras lineales simples.</p>
+            </div>
+            <div class="menu-card" onclick="App.start('double')">
+                <h2>Nodo Doble</h2>
+                <p>Estructuras bidireccionales.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="back-to-menu" title="Volver al menú" onclick="App.reset()">&#10229;</div>
+
+    <div id="toolbar">
+        <input type="text" id="contentInput" placeholder="Valor...">
+        <button id="btnSpawn"></button>
+        <button class="btn-ptr" onclick="Nodes.create('ptr')">Puntero</button>
+        <button class="btn-nil" onclick="Nodes.create('nil')">Nil</button>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <div id="viewport">
+        <div id="world">
+            <svg id="svg-layer"></svg>
+        </div>
+    </div>
+
+    <div id="context-menu">
+        <div class="menu-item" id="m-con-next">Conectar Próximo (Derecha)</div>
+        <div class="menu-item" id="m-con-prev">Conectar Anterior (Izquierda)</div>
+        <div class="menu-item" id="m-dis">Eliminar Salidas</div>
+        <div class="menu-item" id="m-del">Eliminar Elemento</div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

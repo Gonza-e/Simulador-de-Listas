@@ -1,0 +1,75 @@
+:root {
+    --node-data-bg: #f0f7ff;
+    --node-data-border: #3498db;
+    --ptr-bg: #f5f0ff;
+    --ptr-border: #9b59b6;
+    --nil-bg: #fdf2e9;
+    --nil-border: #e67e22;
+    --text-color: #2c3e50;
+    --bg-main: #f8f9fa;
+}
+
+body, html { 
+    margin: 0; padding: 0; width: 100%; height: 100%; 
+    overflow: hidden; background: var(--bg-main); font-family: 'Segoe UI', sans-serif;
+}
+
+/* --- MENÚ INICIAL --- */
+#mode-selector {
+    position: fixed; inset: 0; background: rgba(248, 249, 250, 0.98);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    z-index: 5000; gap: 30px;
+}
+.menu-container { display: flex; gap: 20px; }
+.menu-card {
+    background: white; padding: 40px; border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center;
+    cursor: pointer; transition: all 0.3s; width: 250px; border: 2px solid transparent;
+}
+.menu-card:hover { transform: translateY(-10px); border-color: var(--ptr-border); }
+.menu-card h2 { margin: 0 0 10px 0; color: var(--text-color); }
+
+/* --- INTERFAZ --- */
+#back-to-menu {
+    position: fixed; top: 20px; left: 20px; z-index: 4000;
+    background: white; width: 45px; height: 45px; border-radius: 50%;
+    display: none; align-items: center; justify-content: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1); cursor: pointer;
+    font-size: 24px; color: var(--text-color); border: 1px solid #eee;
+}
+
+#toolbar {
+    position: fixed; top: 20px; left: 80px; z-index: 2000;
+    background: white; padding: 12px; border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08); display: none; gap: 10px; border: 1px solid #eee;
+}
+input { padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; outline: none; }
+button { padding: 8px 16px; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; }
+#btnSpawn { background: var(--node-data-border); }
+.btn-ptr { background: var(--ptr-border); }
+.btn-nil { background: var(--nil-border); }
+
+/* --- LIENZO Y NODOS --- */
+#viewport { width: 100vw; height: 100vh; cursor: grab; position: relative; overflow: hidden; }
+#viewport:active { cursor: grabbing; }
+#world { position: absolute; top: 0; left: 0; transform-origin: 0 0; }
+.element { position: absolute; display: flex; z-index: 10; user-select: none; }
+
+.node-rect { width: 160px; height: 50px; border-radius: 8px; overflow: hidden; }
+.node-double { width: 200px; height: 50px; border-radius: 8px; overflow: hidden; }
+
+.side-ptr { flex: 1; background: var(--ptr-bg); border: 2px dashed var(--ptr-border); display: flex; align-items: center; justify-content: center; }
+.data-core { flex: 2; background: var(--node-data-bg); color: var(--node-data-border); border: 2px dashed var(--node-data-border); display: flex; align-items: center; justify-content: center; font-weight: bold; }
+.ptr-dot { width: 10px; height: 10px; background: var(--ptr-border); border-radius: 50%; }
+
+.ptr-circle, .nil-node { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+.ptr-circle { background: var(--ptr-bg); border: 2px dashed var(--ptr-border); color: var(--ptr-border); }
+.nil-node { width: 45px; height: 45px; background: var(--nil-bg); border: 2px dashed var(--nil-border); color: var(--nil-border); font-size: 22px; }
+
+#svg-layer { position: absolute; top: -5000px; left: -5000px; width: 15000px; height: 15000px; pointer-events: none; z-index: 5; }
+
+/* --- MENÚS Y TOASTS --- */
+#context-menu { position: fixed; display: none; background: white; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); z-index: 5000; border: 1px solid #eee; }
+.menu-item { padding: 10px 20px; cursor: pointer; font-size: 13px; color: var(--text-color); }
+.menu-item:hover { background: #f0f7ff; }
+.toast { background: #2c3e50; color: white; padding: 10px 15px; border-radius: 8px; margin-bottom: 5px; font-size: 13px; }
