@@ -28,19 +28,25 @@ const Renderer = {
         const t = document.getElementById(conn.to);
         if (!f || !t) return;
 
+        // Usamos getBoundingClientRect si quieres precisión absoluta, 
+        // pero offsetWidth es más rápido para juegos/herramientas:
+        const fW = f.offsetWidth;
+        const fH = f.offsetHeight;
+
         let startX, startY;
         if (conn.port === 'next') {
-            startX = f.offsetLeft + f.offsetWidth + State.OFFSET;
-            startY = f.offsetTop + (f.offsetHeight / 2) - 8 + State.OFFSET;
+            startX = f.offsetLeft + fW + State.OFFSET; // Lado derecho real
+            startY = f.offsetTop + (fH / 2) - 8 + State.OFFSET;
         } else {
-            startX = f.offsetLeft + State.OFFSET;
-            startY = f.offsetTop + (f.offsetHeight / 2) + 8 + State.OFFSET;
+            startX = f.offsetLeft + State.OFFSET; // Lado izquierdo real
+            startY = f.offsetTop + (fH / 2) + 8 + State.OFFSET;
         }
 
         const end = this.getIntersection(startX, startY, t);
+        
+        // --- DIBUJO DEL PATH ---
         const dx = end.x - startX;
         const flex = Math.min(Math.abs(dx) * 0.4, 60);
-
         const d = `M ${startX} ${startY} C ${startX + (conn.port === 'prev' ? -flex : flex)} ${startY}, ${end.x - (dx > 0 ? flex : -flex)} ${end.y}, ${end.x} ${end.y}`;
 
         const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
@@ -60,24 +66,33 @@ const Renderer = {
     },
 
     getIntersection(sx, sy, el) {
-        const r = { 
-            l: el.offsetLeft + State.OFFSET, 
-            t: el.offsetTop + State.OFFSET, 
-            w: el.offsetWidth, // <--- Esto lee el ancho real actual
-            h: el.offsetHeight 
+        // Usamos offsetWidth y offsetHeight dinámicos
+        const r = {
+            l: el.offsetLeft + State.OFFSET,
+            t: el.offsetTop + State.OFFSET,
+            w: el.offsetWidth, 
+            h: el.offsetHeight
         };
-        const cx = rect.left + rect.w / 2;
-        const cy = rect.top + rect.h / 2;
+        const cx = r.l + r.w / 2;
+        const cy = r.t + r.h / 2;
         const dx = cx - sx, dy = cy - sy;
 
+        // Si es un puntero (que ahora puede ser una cápsula) o un NIL
         if (el.classList.contains('ptr-circle') || el.classList.contains('nil-node')) {
-            const rad = rect.w / 2;
+            // Para formas no rectangulares, aproximamos al borde
             const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-            return { x: cx - (dx / dist) * rad, y: cy - (dy / dist) * rad };
+            // Usamos el promedio del radio para que la flecha toque el borde
+            const radX = r.w / 2;
+            const radY = r.h / 2;
+            return { x: cx - (dx / dist) * radX, y: cy - (dy / dist) * radY };
         } else {
+            // Lógica para nodos rectangulares (Simple/Doble)
             const m = dy / dx;
-            if (Math.abs(m) <= rect.h / rect.w) return { x: dx > 0 ? rect.left : rect.left + rect.w, y: cy - m * (dx > 0 ? rect.w / 2 : -rect.w / 2) };
-            else return { x: cx - (dy > 0 ? rect.h / 2 : -rect.h / 2) / m, y: dy > 0 ? rect.top : rect.top + rect.h };
+            if (Math.abs(m) <= r.h / r.w) {
+                return { x: dx > 0 ? r.l : r.l + r.w, y: cy - m * (dx > 0 ? r.w / 2 : -r.w / 2) };
+            } else {
+                return { x: cx - (dy > 0 ? r.h / 2 : -r.h / 2) / m, y: dy > 0 ? r.t : r.t + r.h };
+            }
         }
     }
 };
@@ -146,18 +161,26 @@ const UI = {
     menu: document.getElementById('context-menu'),
 
     init() {
+        // Dentro de UI.init() o donde tengas el onmousemove
         window.onmousemove = (e) => {
             if (State.isPanning) {
                 State.worldX += e.movementX; 
                 State.worldY += e.movementY;
                 document.getElementById('world').style.transform = `translate(${State.worldX}px, ${State.worldY}px)`;
             } else if (State.currentDrag) {
-                // Movimiento directo
+                // 1. Movemos el elemento inmediatamente
                 State.currentDrag.style.left = (e.clientX - State.worldX - State.currentDrag.ox) + 'px';
                 State.currentDrag.style.top = (e.clientY - State.worldY - State.currentDrag.oy) + 'px';
                 
-                // Forzar actualización inmediata de las flechas
-                requestAnimationFrame(() => Renderer.update()); 
+                // 2. Sincronizamos las flechas con el refresco de pantalla
+                // Esto elimina el "lag" visual
+                if (!State.frameRequested) {
+                    State.frameRequested = true;
+                    requestAnimationFrame(() => {
+                        Renderer.update();
+                        State.frameRequested = false;
+                    });
+                }
             }
         };
         window.onmouseup = () => { State.isPanning = false; State.currentDrag = null; };

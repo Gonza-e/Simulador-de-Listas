@@ -69,13 +69,13 @@ button { padding: 8px 16px; color: white; border: none; border-radius: 6px; curs
     align-items: center; 
     justify-content: center; 
     font-weight: bold; 
-    transition: all 0.2s ease;
+    transition: none !important; /* CRUCIAL para eliminar el delay */
 }
 
 /* Puntero Dinámico: Se expande con el texto */
 .ptr-circle { 
     min-width: 50px;
-    width: fit-content; /* Cambiado de auto a fit-content */
+    width: max-content; /* Asegura que el ancho sea el exacto del texto */
     height: 50px; 
     padding: 0 15px; 
     border-radius: 25px; 
@@ -88,10 +88,11 @@ button { padding: 8px 16px; color: white; border: none; border-radius: 6px; curs
     justify-content: center;
     white-space: nowrap; 
     box-sizing: border-box;
-    /* --- FIX PARA EL DELAY --- */
-    transition: none !important; /* Eliminamos transiciones que causan lag al mover */
-    contain: layout;             /* Optimiza el renderizado */
-    will-change: left, top;      /* Prepara a la GPU para el movimiento */
+    position: absolute;
+    /* --- ELIMINAR DELAY --- */
+    transition: none !important; 
+    transform: translateZ(0); /* Fuerza el uso de la tarjeta de video (GPU) */
+    will-change: left, top;
 }
 
 /* Nodo NIL: Mantiene su forma fija */
