@@ -7,47 +7,111 @@
     --nil-border: #e67e22;
     --text-color: #2c3e50;
     --bg-main: #f8f9fa;
+    --toolbar-bg: white;
+    --toolbar-border: #eee;
+    --input-border: #ddd;
+    --input-bg: white;
+    --input-color: #2c3e50;
+    --back-btn-bg: white;
+    --back-btn-border: #eee;
+    --context-menu-bg: white;
+    --context-menu-border: #eee;
+    --menu-item-hover: #f0f7ff;
+    --mode-selector-bg: rgba(248, 249, 250, 0.98);
+    --menu-card-bg: white;
+    --arrow-color: #9b59b6;
+}
+
+/* ===== DARK NEON THEME ===== */
+body.dark-neon {
+    --node-data-bg: #0d1b2e;
+    --node-data-border: #00d4ff;
+    --ptr-bg: #1a0d2e;
+    --ptr-border: #bf5fff;
+    --nil-bg: #1a1000;
+    --nil-border: #ff8c00;
+    --text-color: #e0e0ff;
+    --bg-main: #080d14;
+    --toolbar-bg: #0f1923;
+    --toolbar-border: #1e3a5f;
+    --input-border: #1e3a5f;
+    --input-bg: #0a1520;
+    --input-color: #c0e8ff;
+    --back-btn-bg: #0f1923;
+    --back-btn-border: #1e3a5f;
+    --context-menu-bg: #0f1923;
+    --context-menu-border: #1e3a5f;
+    --menu-item-hover: #0d2a45;
+    --mode-selector-bg: rgba(8, 13, 20, 0.98);
+    --menu-card-bg: #0f1923;
+    --arrow-color: #bf5fff;
 }
 
 body, html { 
     margin: 0; padding: 0; width: 100%; height: 100%; 
     overflow: hidden; background: var(--bg-main); font-family: 'Segoe UI', sans-serif;
+    transition: background 0.3s;
 }
 
 /* --- MENÚ INICIAL --- */
 #mode-selector {
-    position: fixed; inset: 0; background: rgba(248, 249, 250, 0.98);
+    position: fixed; inset: 0; background: var(--mode-selector-bg);
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     z-index: 5000; gap: 30px;
 }
+#mode-selector h1 { color: var(--text-color); }
 .menu-container { display: flex; gap: 20px; }
 .menu-card {
-    background: white; padding: 40px; border-radius: 20px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center;
+    background: var(--menu-card-bg); padding: 40px; border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25); text-align: center;
     cursor: pointer; transition: all 0.3s; width: 250px; border: 2px solid transparent;
+    color: var(--text-color);
 }
 .menu-card:hover { transform: translateY(-10px); border-color: var(--ptr-border); }
 .menu-card h2 { margin: 0 0 10px 0; color: var(--text-color); }
+.menu-card p { color: var(--text-color); opacity: 0.7; }
 
 /* --- INTERFAZ --- */
 #back-to-menu {
     position: fixed; top: 20px; left: 20px; z-index: 4000;
-    background: white; width: 45px; height: 45px; border-radius: 50%;
+    background: var(--back-btn-bg); width: 45px; height: 45px; border-radius: 50%;
     display: none; align-items: center; justify-content: center;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1); cursor: pointer;
-    font-size: 24px; color: var(--text-color); border: 1px solid #eee;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2); cursor: pointer;
+    font-size: 24px; color: var(--text-color); border: 1px solid var(--back-btn-border);
+    transition: background 0.3s, border-color 0.3s, color 0.3s;
 }
 
 #toolbar {
     position: fixed; top: 20px; left: 80px; z-index: 2000;
-    background: white; padding: 12px; border-radius: 12px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.08); display: none; gap: 10px; border: 1px solid #eee;
+    background: var(--toolbar-bg); padding: 12px; border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15); display: none; gap: 10px;
+    border: 1px solid var(--toolbar-border);
+    transition: background 0.3s, border-color 0.3s;
+    align-items: center;
 }
-input { padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; outline: none; }
+input {
+    padding: 8px 12px; border: 1px solid var(--input-border); border-radius: 6px;
+    outline: none; background: var(--input-bg); color: var(--input-color);
+    transition: background 0.3s, border-color 0.3s, color 0.3s;
+}
 button { padding: 8px 16px; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; }
 #btnSpawn { background: var(--node-data-border); }
 .btn-ptr { background: var(--ptr-border); }
 .btn-nil { background: var(--nil-border); }
+
+/* Botón de tema */
+#btn-theme {
+    background: transparent;
+    border: 1px solid var(--input-border) !important;
+    color: var(--text-color) !important;
+    font-size: 16px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: border-color 0.3s, color 0.3s;
+    line-height: 1;
+}
+body.dark-neon #btn-theme { border-color: var(--ptr-border) !important; }
 
 /* --- LIENZO Y NODOS --- */
 #viewport { width: 100vw; height: 100vh; cursor: grab; position: relative; overflow: hidden; }
@@ -69,13 +133,13 @@ button { padding: 8px 16px; color: white; border: none; border-radius: 6px; curs
     align-items: center; 
     justify-content: center; 
     font-weight: bold; 
-    transition: none !important; /* CRUCIAL para eliminar el delay */
+    transition: none !important;
 }
 
-/* Puntero Dinámico: Se expande con el texto */
+/* Puntero Dinámico */
 .ptr-circle { 
     min-width: 50px;
-    width: max-content; /* Asegura que el ancho sea el exacto del texto */
+    width: max-content;
     height: 50px; 
     padding: 0 15px; 
     border-radius: 25px; 
@@ -89,13 +153,12 @@ button { padding: 8px 16px; color: white; border: none; border-radius: 6px; curs
     white-space: nowrap; 
     box-sizing: border-box;
     position: absolute;
-    /* --- ELIMINAR DELAY --- */
     transition: none !important; 
-    transform: translateZ(0); /* Fuerza el uso de la tarjeta de video (GPU) */
+    transform: translateZ(0);
     will-change: left, top;
 }
 
-/* Nodo NIL: Mantiene su forma fija */
+/* Nodo NIL */
 .nil-node { 
     width: 45px; 
     height: 45px; 
@@ -106,10 +169,22 @@ button { padding: 8px 16px; color: white; border: none; border-radius: 6px; curs
     font-size: 22px; 
 }
 
+/* Efecto neon en dark mode: borde brillante sutil */
+body.dark-neon .side-ptr { box-shadow: inset 0 0 6px rgba(191, 95, 255, 0.15); }
+body.dark-neon .data-core { box-shadow: inset 0 0 6px rgba(0, 212, 255, 0.15); }
+body.dark-neon .ptr-circle { box-shadow: 0 0 8px rgba(191, 95, 255, 0.3); }
+body.dark-neon .nil-node { box-shadow: 0 0 8px rgba(255, 140, 0, 0.3); }
+
 #svg-layer { position: absolute; top: -5000px; left: -5000px; width: 15000px; height: 15000px; pointer-events: none; z-index: 5; }
 
 /* --- MENÚS Y TOASTS --- */
-#context-menu { position: fixed; display: none; background: white; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); z-index: 5000; border: 1px solid #eee; }
+#context-menu {
+    position: fixed; display: none; background: var(--context-menu-bg);
+    border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    z-index: 5000; border: 1px solid var(--context-menu-border);
+    transition: background 0.3s, border-color 0.3s;
+}
 .menu-item { padding: 10px 20px; cursor: pointer; font-size: 13px; color: var(--text-color); }
-.menu-item:hover { background: #f0f7ff; }
+.menu-item:hover { background: var(--menu-item-hover); }
 .toast { background: #2c3e50; color: white; padding: 10px 15px; border-radius: 8px; margin-bottom: 5px; font-size: 13px; }
+body.dark-neon .toast { background: #1a0d2e; border: 1px solid var(--ptr-border); }

@@ -18,6 +18,10 @@ const State = {
 const Renderer = {
     svg: document.getElementById('svg-layer'),
 
+    getArrowColor() {
+        return document.body.classList.contains('dark-neon') ? '#bf5fff' : '#9b59b6';
+    },
+
     update() {
         this.svg.innerHTML = '';
         State.connections.forEach(conn => this.drawConnection(conn));
@@ -28,30 +32,29 @@ const Renderer = {
         const t = document.getElementById(conn.to);
         if (!f || !t) return;
 
-        // Usamos getBoundingClientRect si quieres precisión absoluta, 
-        // pero offsetWidth es más rápido para juegos/herramientas:
         const fW = f.offsetWidth;
         const fH = f.offsetHeight;
 
         let startX, startY;
         if (conn.port === 'next') {
-            startX = f.offsetLeft + fW + State.OFFSET; // Lado derecho real
+            startX = f.offsetLeft + fW + State.OFFSET;
             startY = f.offsetTop + (fH / 2) - 8 + State.OFFSET;
         } else {
-            startX = f.offsetLeft + State.OFFSET; // Lado izquierdo real
+            startX = f.offsetLeft + State.OFFSET;
             startY = f.offsetTop + (fH / 2) + 8 + State.OFFSET;
         }
 
         const end = this.getIntersection(startX, startY, t);
         
-        // --- DIBUJO DEL PATH ---
         const dx = end.x - startX;
         const flex = Math.min(Math.abs(dx) * 0.4, 60);
         const d = `M ${startX} ${startY} C ${startX + (conn.port === 'prev' ? -flex : flex)} ${startY}, ${end.x - (dx > 0 ? flex : -flex)} ${end.y}, ${end.x} ${end.y}`;
 
+        const color = this.getArrowColor();
+
         const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         path.setAttribute('d', d);
-        path.setAttribute('stroke', '#9b59b6');
+        path.setAttribute('stroke', color);
         path.setAttribute('stroke-width', '2.5');
         path.setAttribute('fill', 'none');
 
@@ -59,14 +62,13 @@ const Renderer = {
         dot.setAttribute('cx', end.x);
         dot.setAttribute('cy', end.y);
         dot.setAttribute('r', '5');
-        dot.setAttribute('fill', '#9b59b6');
+        dot.setAttribute('fill', color);
 
         this.svg.appendChild(path);
         this.svg.appendChild(dot);
     },
 
     getIntersection(sx, sy, el) {
-        // Usamos offsetWidth y offsetHeight dinámicos
         const r = {
             l: el.offsetLeft + State.OFFSET,
             t: el.offsetTop + State.OFFSET,
@@ -77,16 +79,12 @@ const Renderer = {
         const cy = r.t + r.h / 2;
         const dx = cx - sx, dy = cy - sy;
 
-        // Si es un puntero (que ahora puede ser una cápsula) o un NIL
         if (el.classList.contains('ptr-circle') || el.classList.contains('nil-node')) {
-            // Para formas no rectangulares, aproximamos al borde
             const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-            // Usamos el promedio del radio para que la flecha toque el borde
             const radX = r.w / 2;
             const radY = r.h / 2;
             return { x: cx - (dx / dist) * radX, y: cy - (dy / dist) * radY };
         } else {
-            // Lógica para nodos rectangulares (Simple/Doble)
             const m = dy / dx;
             if (Math.abs(m) <= r.h / r.w) {
                 return { x: dx > 0 ? r.l : r.l + r.w, y: cy - m * (dx > 0 ? r.w / 2 : -r.w / 2) };
@@ -122,7 +120,6 @@ const Nodes = {
             w = 45; h = 45; div.className = 'element nil-node'; div.innerText = '=';
         }
         
-        // Posicionamiento central
         div.style.left = (window.innerWidth / 2 - State.worldX - (w / 2)) + 'px';
         div.style.top = (window.innerHeight / 2 - State.worldY - (h / 2)) + 'px';
 
@@ -160,20 +157,22 @@ const Nodes = {
 const UI = {
     menu: document.getElementById('context-menu'),
 
+    toggleTheme() {
+        const isDark = document.body.classList.toggle('dark-neon');
+        document.getElementById('btn-theme').textContent = isDark ? '☀️' : '🌙';
+        Renderer.update();
+    },
+
     init() {
-        // Dentro de UI.init() o donde tengas el onmousemove
         window.onmousemove = (e) => {
             if (State.isPanning) {
                 State.worldX += e.movementX; 
                 State.worldY += e.movementY;
                 document.getElementById('world').style.transform = `translate(${State.worldX}px, ${State.worldY}px)`;
             } else if (State.currentDrag) {
-                // 1. Movemos el elemento inmediatamente
                 State.currentDrag.style.left = (e.clientX - State.worldX - State.currentDrag.ox) + 'px';
                 State.currentDrag.style.top = (e.clientY - State.worldY - State.currentDrag.oy) + 'px';
                 
-                // 2. Sincronizamos las flechas con el refresco de pantalla
-                // Esto elimina el "lag" visual
                 if (!State.frameRequested) {
                     State.frameRequested = true;
                     requestAnimationFrame(() => {
@@ -187,7 +186,6 @@ const UI = {
         document.getElementById('viewport').onmousedown = (e) => { if (e.target.id === 'viewport') State.isPanning = true; };
         window.onclick = () => this.menu.style.display = 'none';
         
-        // Botones del menú contextual
         document.getElementById('m-del').onclick = () => {
             State.connections = State.connections.filter(c => c.from !== State.contextTargetId && c.to !== State.contextTargetId);
             document.getElementById(State.contextTargetId).remove(); Renderer.update();
@@ -205,37 +203,27 @@ const UI = {
         this.menu.style.left = x + 'px'; 
         this.menu.style.top = y + 'px';
 
-        // Identificamos qué tipo de nodo es
         const isNil = el.classList.contains('nil-node');
         const isPtr = el.classList.contains('ptr-circle');
         const isDouble = el.classList.contains('node-double');
 
-        // Referencias a los botones del menú
         const btnNext = document.getElementById('m-con-next');
         const btnDis = document.getElementById('m-dis');
 
-        // --- LÓGICA DE TEXTO PERSONALIZADO ---
-
         if (isPtr) {
-            // Si es un PUNTERO
             btnNext.innerText = "Realizar Conexión";
             btnNext.style.display = "block";
-            btnDis.style.display = "block"; // Permite limpiar su flecha
+            btnDis.style.display = "block";
         } else if (isNil) {
-            // Si es un NIL
-            btnNext.style.display = "none"; // NIL no tiene salida
-            btnDis.style.display = "none";  // NIL no tiene salidas que limpiar
+            btnNext.style.display = "none";
+            btnDis.style.display = "none";
         } else {
-            // Si es un NODO (Simple o Doble)
             btnNext.innerText = "Conectar Próximo (Derecha)";
             btnNext.style.display = "block";
             btnDis.style.display = "block";
         }
 
-        // El botón de eliminar siempre se llama "Eliminar Elemento"
         document.getElementById('m-del').innerText = "Eliminar Elemento";
-
-        // Mostrar/Ocultar Conectar Anterior (solo para listas dobles)
         document.getElementById('m-con-prev').style.display = isDouble ? 'block' : 'none';
     }
 };
