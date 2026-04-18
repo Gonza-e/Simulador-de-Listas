@@ -14,7 +14,7 @@ const State = {
 
 /**
  * MOTOR DE RENDERIZADO (FLECHAS)
- * svg se lee lazy para evitar null cuando el script carga antes del DOM
+ * svg leído lazy para evitar null en GitHub Pages
  */
 const Renderer = {
     get svg() { return document.getElementById('svg-layer'); },
@@ -39,8 +39,8 @@ const Renderer = {
 
         const fW = f.offsetWidth;
         const fH = f.offsetHeight;
-
         let startX, startY;
+
         if (conn.port === 'next') {
             startX = f.offsetLeft + fW + State.OFFSET;
             startY = f.offsetTop + (fH / 2) - 8 + State.OFFSET;
@@ -49,10 +49,10 @@ const Renderer = {
             startY = f.offsetTop + (fH / 2) + 8 + State.OFFSET;
         }
 
-        const end = this.getIntersection(startX, startY, t);
-        const dx = end.x - startX;
+        const end  = this.getIntersection(startX, startY, t);
+        const dx   = end.x - startX;
         const flex = Math.min(Math.abs(dx) * 0.4, 60);
-        const d = `M ${startX} ${startY} C ${startX + (conn.port === 'prev' ? -flex : flex)} ${startY}, ${end.x - (dx > 0 ? flex : -flex)} ${end.y}, ${end.x} ${end.y}`;
+        const d    = `M ${startX} ${startY} C ${startX + (conn.port === 'prev' ? -flex : flex)} ${startY}, ${end.x - (dx > 0 ? flex : -flex)} ${end.y}, ${end.x} ${end.y}`;
 
         const color = this.getArrowColor();
 
@@ -75,7 +75,7 @@ const Renderer = {
     getIntersection(sx, sy, el) {
         const r = {
             l: el.offsetLeft + State.OFFSET,
-            t: el.offsetTop + State.OFFSET,
+            t: el.offsetTop  + State.OFFSET,
             w: el.offsetWidth,
             h: el.offsetHeight
         };
@@ -104,7 +104,7 @@ const Nodes = {
     get world() { return document.getElementById('world'); },
 
     create(type) {
-        const id = 'el-' + Date.now();
+        const id  = 'el-' + Date.now();
         const val = document.getElementById('contentInput').value || 'Data';
         const div = document.createElement('div');
         div.id = id;
@@ -112,18 +112,23 @@ const Nodes = {
         let w = 160, h = 50;
         if (type === 'simple') {
             div.className = 'element node-rect';
-            div.innerHTML = `<div class="data-core" style="border-right:none; border-radius:8px 0 0 8px">${val}</div><div class="side-ptr" style="border-radius:0 8px 8px 0"><div class="ptr-dot"></div></div>`;
+            div.innerHTML = '<div class="data-core" style="border-right:none;border-radius:8px 0 0 8px">' + val + '</div><div class="side-ptr" style="border-radius:0 8px 8px 0"><div class="ptr-dot"></div></div>';
         } else if (type === 'double') {
-            w = 200; div.className = 'element node-double';
-            div.innerHTML = `<div class="side-ptr" style="border-right:none; border-radius:8px 0 0 8px"><div class="ptr-dot"></div></div><div class="data-core" style="border-right:none;">${val}</div><div class="side-ptr" style="border-radius:0 8px 8px 0"><div class="ptr-dot"></div></div>`;
+            w = 200;
+            div.className = 'element node-double';
+            div.innerHTML = '<div class="side-ptr" style="border-right:none;border-radius:8px 0 0 8px"><div class="ptr-dot"></div></div><div class="data-core" style="border-right:none;">' + val + '</div><div class="side-ptr" style="border-radius:0 8px 8px 0"><div class="ptr-dot"></div></div>';
         } else if (type === 'ptr') {
-            w = 50; h = 50; div.className = 'element ptr-circle'; div.innerText = val || 'P';
+            w = 50; h = 50;
+            div.className = 'element ptr-circle';
+            div.textContent = val || 'P';
         } else if (type === 'nil') {
-            w = 45; h = 45; div.className = 'element nil-node'; div.innerText = '=';
+            w = 45; h = 45;
+            div.className = 'element nil-node';
+            div.textContent = '=';
         }
 
-        div.style.left = (window.innerWidth / 2 - State.worldX - (w / 2)) + 'px';
-        div.style.top  = (window.innerHeight / 2 - State.worldY - (h / 2)) + 'px';
+        div.style.left = (window.innerWidth  / 2 - State.worldX - w / 2) + 'px';
+        div.style.top  = (window.innerHeight / 2 - State.worldY - h / 2) + 'px';
 
         this.bindEvents(div);
         this.world.appendChild(div);
@@ -131,139 +136,162 @@ const Nodes = {
     },
 
     bindEvents(div) {
-        div.onmousedown = (e) => {
+        div.addEventListener('mousedown', function(e) {
             if (e.button !== 0) return;
             e.stopPropagation();
             if (State.connectingFromId) {
                 if (State.connectingFromId !== div.id) {
-                    State.connections = State.connections.filter(c => !(c.from === State.connectingFromId && c.port === State.currentPort));
+                    State.connections = State.connections.filter(function(c) {
+                        return !(c.from === State.connectingFromId && c.port === State.currentPort);
+                    });
                     State.connections.push({ from: State.connectingFromId, to: div.id, port: State.currentPort });
                 }
-                State.connectingFromId = null; Renderer.update(); return;
+                State.connectingFromId = null;
+                Renderer.update();
+                return;
             }
             State.currentDrag = div;
-            div.ox = e.clientX - div.getBoundingClientRect().left;
-            div.oy = e.clientY - div.getBoundingClientRect().top;
-        };
+            var rect = div.getBoundingClientRect();
+            div.ox = e.clientX - rect.left;
+            div.oy = e.clientY - rect.top;
+        });
 
-        div.oncontextmenu = (e) => {
-            e.preventDefault(); e.stopPropagation();
+        div.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
             UI.showContextMenu(e.clientX, e.clientY, div);
-        };
+        });
     }
 };
 
 /**
- * INTERFAZ Y APLICACIÓN
+ * INTERFAZ
  */
 const UI = {
     get menu() { return document.getElementById('context-menu'); },
 
     toggleTheme() {
         const isDark = document.body.classList.toggle('dark-neon');
-        document.getElementById('btn-theme').textContent = isDark ? '☀️' : '🌙';
+        document.getElementById('btn-theme').textContent = isDark ? '\u2600' : '\u263D';
         Renderer.update();
     },
 
     init() {
-        window.onmousemove = (e) => {
+        window.addEventListener('mousemove', function(e) {
             if (State.isPanning) {
                 State.worldX += e.movementX;
                 State.worldY += e.movementY;
-                document.getElementById('world').style.transform = `translate(${State.worldX}px, ${State.worldY}px)`;
+                document.getElementById('world').style.transform = 'translate(' + State.worldX + 'px,' + State.worldY + 'px)';
             } else if (State.currentDrag) {
                 State.currentDrag.style.left = (e.clientX - State.worldX - State.currentDrag.ox) + 'px';
                 State.currentDrag.style.top  = (e.clientY - State.worldY - State.currentDrag.oy) + 'px';
                 if (!State.frameRequested) {
                     State.frameRequested = true;
-                    requestAnimationFrame(() => { Renderer.update(); State.frameRequested = false; });
+                    requestAnimationFrame(function() { Renderer.update(); State.frameRequested = false; });
                 }
             }
-        };
-        window.onmouseup = () => { State.isPanning = false; State.currentDrag = null; };
-        document.getElementById('viewport').onmousedown = (e) => {
-            if (e.target.id === 'viewport') State.isPanning = true;
-        };
+        });
 
-        document.getElementById('m-del').onclick = (e) => {
+        window.addEventListener('mouseup', function() {
+            State.isPanning  = false;
+            State.currentDrag = null;
+        });
+
+        document.getElementById('viewport').addEventListener('mousedown', function(e) {
+            if (e.target.id === 'viewport') State.isPanning = true;
+        });
+
+        document.getElementById('m-del').addEventListener('click', function(e) {
             e.stopPropagation();
-            State.connections = State.connections.filter(c => c.from !== State.contextTargetId && c.to !== State.contextTargetId);
-            document.getElementById(State.contextTargetId).remove();
+            document.getElementById('context-menu').style.display = 'none';
+            State.connections = State.connections.filter(function(c) {
+                return c.from !== State.contextTargetId && c.to !== State.contextTargetId;
+            });
+            var el = document.getElementById(State.contextTargetId);
+            if (el) el.remove();
             Renderer.update();
-        };
-        document.getElementById('m-dis').onclick = (e) => {
+        });
+
+        document.getElementById('m-dis').addEventListener('click', function(e) {
             e.stopPropagation();
-            State.connections = State.connections.filter(c => c.from !== State.contextTargetId);
+            document.getElementById('context-menu').style.display = 'none';
+            State.connections = State.connections.filter(function(c) {
+                return c.from !== State.contextTargetId;
+            });
             Renderer.update();
-        };
-        document.getElementById('m-con-next').onclick = (e) => {
+        });
+
+        document.getElementById('m-con-next').addEventListener('click', function(e) {
             e.stopPropagation();
+            document.getElementById('context-menu').style.display = 'none';
             State.connectingFromId = State.contextTargetId;
             State.currentPort = 'next';
-        };
-        document.getElementById('m-con-prev').onclick = (e) => {
+        });
+
+        document.getElementById('m-con-prev').addEventListener('click', function(e) {
             e.stopPropagation();
+            document.getElementById('context-menu').style.display = 'none';
             State.connectingFromId = State.contextTargetId;
             State.currentPort = 'prev';
-        };
+        });
     },
 
     showContextMenu(x, y, el) {
-        const menu = this.menu;
+        var menu = this.menu;
         State.contextTargetId = el.id;
         menu.style.display = 'block';
         menu.style.left = x + 'px';
         menu.style.top  = y + 'px';
 
-        const isNil    = el.classList.contains('nil-node');
-        const isPtr    = el.classList.contains('ptr-circle');
-        const isDouble = el.classList.contains('node-double');
+        var isNil    = el.classList.contains('nil-node');
+        var isPtr    = el.classList.contains('ptr-circle');
+        var isDouble = el.classList.contains('node-double');
 
-        const btnNext = document.getElementById('m-con-next');
-        const btnDis  = document.getElementById('m-dis');
+        var btnNext = document.getElementById('m-con-next');
+        var btnDis  = document.getElementById('m-dis');
 
         if (isPtr) {
-            btnNext.innerText = 'Realizar Conexión'; btnNext.style.display = 'block'; btnDis.style.display = 'block';
+            btnNext.textContent    = 'Realizar Conexion';
+            btnNext.style.display  = 'block';
+            btnDis.style.display   = 'block';
         } else if (isNil) {
-            btnNext.style.display = 'none'; btnDis.style.display = 'none';
+            btnNext.style.display  = 'none';
+            btnDis.style.display   = 'none';
         } else {
-            btnNext.innerText = 'Conectar Próximo (Derecha)'; btnNext.style.display = 'block'; btnDis.style.display = 'block';
+            btnNext.textContent    = 'Conectar Proximo (Derecha)';
+            btnNext.style.display  = 'block';
+            btnDis.style.display   = 'block';
         }
-        document.getElementById('m-del').innerText = 'Eliminar Elemento';
+        document.getElementById('m-del').textContent = 'Eliminar Elemento';
         document.getElementById('m-con-prev').style.display = isDouble ? 'block' : 'none';
     }
 };
 
+/**
+ * APP
+ */
 const App = {
     currentMode: 'simple',
+
     start(mode) {
         UI.init();
         document.getElementById('mode-selector').style.display = 'none';
-        document.getElementById('back-to-menu').style.display = 'flex';
-        document.getElementById('toolbar').style.display = 'flex';
+        document.getElementById('back-to-menu').style.display  = 'flex';
+        document.getElementById('toolbar').style.display       = 'flex';
         App.currentMode = mode;
-        const btn = document.getElementById('btnSpawn');
-        btn.innerText = mode === 'simple' ? 'Nuevo Nodo Simple' : 'Nuevo Nodo Doble';
-        btn.onclick = () => Nodes.create(mode);
+        var btn = document.getElementById('btnSpawn');
+        btn.textContent = mode === 'simple' ? 'Nuevo Nodo Simple' : 'Nuevo Nodo Doble';
+        btn.addEventListener('click', function() { Nodes.create(mode); });
     },
-    reset() { if (confirm('¿Seguro que quieres volver al menú?')) location.reload(); }
+
+    reset() {
+        if (confirm('Seguro que quieres volver al menu?')) location.reload();
+    }
 };
 
 /**
- * CIERRE GLOBAL DEL MENÚ CONTEXTUAL
- * Se registra desde el inicio (no depende de UI.init) para que funcione
- * también antes de elegir modo (ej: durante el tutorial)
- */
-document.addEventListener('click', (e) => {
-    const menu = document.getElementById('context-menu');
-    if (menu && !menu.contains(e.target)) {
-        menu.style.display = 'none';
-    }
-});
-
-/**
  * ============================================================
- * TUTORIAL — guía paso a paso del simulador
+ * TUTORIAL
  * ============================================================
  */
 const Tutorial = {
@@ -272,251 +300,195 @@ const Tutorial = {
     steps: [
         {
             title: 'Bienvenido al Simulador',
-            desc: 'Esta herramienta te permite crear y visualizar estructuras de listas enlazadas de forma interactiva. Hay tres tipos de elementos: <strong>Nodos</strong>, <strong>Punteros</strong> y <strong>NIL</strong>.',
-            visual() {
-                return `
-                    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;">
-                        <div class="demo-node">
-                            <div class="demo-data">42</div>
-                            <div class="demo-ptr"><div class="demo-ptr-dot"></div></div>
-                        </div>
-                        <div class="demo-arrow">→</div>
-                        <div class="demo-ptr-node">Head</div>
-                        <div class="demo-arrow">→</div>
-                        <div class="demo-nil">=</div>
-                    </div>
-                    <div class="demo-label">Nodo · Puntero · NIL</div>`;
+            desc: 'Esta herramienta te permite crear y visualizar estructuras de listas enlazadas. Hay tres tipos de elementos: <strong>Nodos</strong>, <strong>Punteros</strong> y <strong>NIL</strong>.',
+            visual: function() {
+                return '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;">'
+                     + '<div class="demo-node"><div class="demo-data">42</div><div class="demo-ptr"><div class="demo-ptr-dot"></div></div></div>'
+                     + '<div class="demo-arrow">&#8594;</div>'
+                     + '<div class="demo-ptr-node">Head</div>'
+                     + '<div class="demo-arrow">&#8594;</div>'
+                     + '<div class="demo-nil">=</div>'
+                     + '</div>'
+                     + '<div class="demo-label">Nodo &middot; Puntero &middot; NIL</div>';
             }
         },
         {
             title: 'Elegir modo de estructura',
-            desc: 'Desde el menú inicial podés elegir entre <strong>Nodo Simple</strong> (puntero solo hacia adelante) y <strong>Nodo Doble</strong> (punteros hacia adelante y hacia atrás). El modo determina qué tipo de nodo crea el botón principal de la barra.',
-            visual() {
-                return `
-                    <div style="display:flex;gap:24px;align-items:center;flex-wrap:wrap;justify-content:center;">
-                        <div style="text-align:center;">
-                            <div class="demo-node">
-                                <div class="demo-data">A</div>
-                                <div class="demo-ptr"><div class="demo-ptr-dot"></div></div>
-                            </div>
-                            <div style="font-size:11px;margin-top:7px;opacity:0.5;color:var(--text-color);">Nodo Simple</div>
-                        </div>
-                        <div style="text-align:center;">
-                            <div class="demo-double-node">
-                                <div class="demo-side"><div class="demo-ptr-dot"></div></div>
-                                <div class="demo-center">B</div>
-                                <div class="demo-side"><div class="demo-ptr-dot"></div></div>
-                            </div>
-                            <div style="font-size:11px;margin-top:7px;opacity:0.5;color:var(--text-color);">Nodo Doble</div>
-                        </div>
-                    </div>`;
+            desc: 'Desde el menu inicial podes elegir entre <strong>Nodo Simple</strong> (puntero solo hacia adelante) y <strong>Nodo Doble</strong> (punteros hacia adelante y hacia atras).',
+            visual: function() {
+                return '<div style="display:flex;gap:24px;align-items:center;flex-wrap:wrap;justify-content:center;">'
+                     + '<div style="text-align:center;">'
+                     + '<div class="demo-node"><div class="demo-data">A</div><div class="demo-ptr"><div class="demo-ptr-dot"></div></div></div>'
+                     + '<div style="font-size:11px;margin-top:7px;opacity:0.5;color:var(--text-color);">Nodo Simple</div></div>'
+                     + '<div style="text-align:center;">'
+                     + '<div class="demo-double-node"><div class="demo-side"><div class="demo-ptr-dot"></div></div><div class="demo-center">B</div><div class="demo-side"><div class="demo-ptr-dot"></div></div></div>'
+                     + '<div style="font-size:11px;margin-top:7px;opacity:0.5;color:var(--text-color);">Nodo Doble</div></div>'
+                     + '</div>';
             }
         },
         {
             title: 'Crear elementos desde la barra',
-            desc: 'Escribí un valor en el campo de texto y presioná el botón correspondiente:<br><br>• <strong>Nuevo Nodo</strong> — crea un nodo con el valor ingresado<br>• <strong>Puntero</strong> — crea un nodo puntero con etiqueta<br>• <strong>Nil</strong> — crea el nodo de fin de lista',
-            visual() {
-                return `
-                    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;">
-                        <div style="background:var(--input-bg);border:1px solid var(--input-border);border-radius:6px;padding:7px 12px;font-size:13px;color:var(--input-color);min-width:70px;">42</div>
-                        <div style="background:var(--node-data-border);color:white;padding:7px 12px;border-radius:6px;font-size:12px;font-weight:700;">Nuevo Nodo</div>
-                        <div style="background:var(--ptr-border);color:white;padding:7px 12px;border-radius:6px;font-size:12px;font-weight:700;">Puntero</div>
-                        <div style="background:var(--nil-border);color:white;padding:7px 12px;border-radius:6px;font-size:12px;font-weight:700;">Nil</div>
-                    </div>
-                    <div class="demo-label">Los elementos aparecen centrados en el lienzo</div>`;
+            desc: 'Escribi un valor en el campo de texto y presiona el boton correspondiente:<br><br>&#8226; <strong>Nuevo Nodo</strong> &mdash; crea un nodo con el valor ingresado<br>&#8226; <strong>Puntero</strong> &mdash; crea un nodo puntero con etiqueta<br>&#8226; <strong>Nil</strong> &mdash; crea el nodo de fin de lista',
+            visual: function() {
+                return '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;">'
+                     + '<div style="background:var(--input-bg);border:1px solid var(--input-border);border-radius:6px;padding:7px 12px;font-size:13px;color:var(--input-color);">42</div>'
+                     + '<div style="background:var(--node-data-border);color:white;padding:7px 12px;border-radius:6px;font-size:12px;font-weight:700;">Nuevo Nodo</div>'
+                     + '<div style="background:var(--ptr-border);color:white;padding:7px 12px;border-radius:6px;font-size:12px;font-weight:700;">Puntero</div>'
+                     + '<div style="background:var(--nil-border);color:white;padding:7px 12px;border-radius:6px;font-size:12px;font-weight:700;">Nil</div>'
+                     + '</div>'
+                     + '<div class="demo-label">Los elementos aparecen centrados en el lienzo</div>';
             }
         },
         {
             title: 'Mover elementos',
-            desc: 'Hacé <strong>clic sostenido</strong> sobre cualquier nodo y arrastralo a la posición que quieras. Las flechas de conexión se actualizan en tiempo real mientras movés.',
-            visual() {
-                return `
-                    <div style="display:flex;align-items:center;gap:14px;justify-content:center;">
-                        <div class="demo-drag-hint">✥</div>
-                        <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-start;">
-                            <div style="font-size:13px;color:var(--text-color);opacity:0.75;">Clic + arrastrar → mover nodo</div>
-                            <div style="font-size:13px;color:var(--text-color);opacity:0.75;">Clic en fondo + arrastrar → desplazar lienzo</div>
-                        </div>
-                    </div>`;
+            desc: 'Haz <strong>clic sostenido</strong> sobre cualquier nodo y arrastralo. Las flechas se actualizan en tiempo real. Para desplazar todo el lienzo, arrastra desde el fondo.',
+            visual: function() {
+                return '<div style="display:flex;align-items:center;gap:14px;justify-content:center;">'
+                     + '<div class="demo-drag-hint">&#10021;</div>'
+                     + '<div style="display:flex;flex-direction:column;gap:8px;">'
+                     + '<div style="font-size:13px;color:var(--text-color);opacity:0.75;">Clic + arrastrar &rarr; mover nodo</div>'
+                     + '<div style="font-size:13px;color:var(--text-color);opacity:0.75;">Clic en fondo + arrastrar &rarr; mover lienzo</div>'
+                     + '</div></div>';
             }
         },
         {
             title: 'Conectar nodos',
-            desc: 'Para crear una flecha entre dos nodos: hacé <strong>clic derecho</strong> en el nodo origen, elegí <em>Conectar Próximo</em> (o <em>Conectar Anterior</em> en nodos dobles), y luego hacé clic en el nodo destino. La flecha se dibuja automáticamente.',
-            visual() {
-                return `
-                    <div style="display:flex;align-items:center;gap:12px;justify-content:center;flex-wrap:wrap;">
-                        <div class="demo-ctx-menu">
-                            <div class="demo-ctx-item highlight">Conectar Próximo (Derecha)</div>
-                            <div class="demo-ctx-item">Conectar Anterior (Izquierda)</div>
-                            <div class="demo-ctx-item">Eliminar Salidas</div>
-                            <div class="demo-ctx-item">Eliminar Elemento</div>
-                        </div>
-                        <div class="demo-arrow" style="font-size:26px;">→</div>
-                        <div style="display:flex;align-items:center;gap:8px;">
-                            <div class="demo-node">
-                                <div class="demo-data">1</div>
-                                <div class="demo-ptr"><div class="demo-ptr-dot"></div></div>
-                            </div>
-                            <div class="demo-arrow">→</div>
-                            <div class="demo-node">
-                                <div class="demo-data">2</div>
-                                <div class="demo-ptr"><div class="demo-ptr-dot"></div></div>
-                            </div>
-                        </div>
-                    </div>`;
+            desc: 'Para crear una flecha: haz <strong>clic derecho</strong> en el nodo origen, elige <em>Conectar Proximo</em> y luego haz clic en el nodo destino.',
+            visual: function() {
+                return '<div style="display:flex;align-items:center;gap:12px;justify-content:center;flex-wrap:wrap;">'
+                     + '<div class="demo-ctx-menu">'
+                     + '<div class="demo-ctx-item highlight">Conectar Proximo (Derecha)</div>'
+                     + '<div class="demo-ctx-item">Conectar Anterior (Izquierda)</div>'
+                     + '<div class="demo-ctx-item">Eliminar Salidas</div>'
+                     + '<div class="demo-ctx-item">Eliminar Elemento</div>'
+                     + '</div>'
+                     + '<div class="demo-arrow" style="font-size:26px;">&#8594;</div>'
+                     + '<div style="display:flex;align-items:center;gap:8px;">'
+                     + '<div class="demo-node"><div class="demo-data">1</div><div class="demo-ptr"><div class="demo-ptr-dot"></div></div></div>'
+                     + '<div class="demo-arrow">&#8594;</div>'
+                     + '<div class="demo-node"><div class="demo-data">2</div><div class="demo-ptr"><div class="demo-ptr-dot"></div></div></div>'
+                     + '</div></div>';
             }
         },
         {
-            title: 'Menú contextual (clic derecho)',
-            desc: 'Al hacer clic derecho sobre cualquier elemento aparece un menú con todas las acciones disponibles según el tipo de nodo:<br><br>• <strong>Conectar</strong> — inicia una conexión<br>• <strong>Eliminar Salidas</strong> — borra las flechas que salen del nodo<br>• <strong>Eliminar Elemento</strong> — elimina el nodo y sus conexiones',
-            visual() {
-                return `
-                    <div style="display:flex;gap:16px;align-items:flex-start;justify-content:center;flex-wrap:wrap;">
-                        <div>
-                            <div style="font-size:11px;opacity:0.45;color:var(--text-color);margin-bottom:5px;text-align:center;">Nodo / Puntero</div>
-                            <div class="demo-ctx-menu">
-                                <div class="demo-ctx-item">Conectar Próximo</div>
-                                <div class="demo-ctx-item">Eliminar Salidas</div>
-                                <div class="demo-ctx-item">Eliminar Elemento</div>
-                            </div>
-                        </div>
-                        <div>
-                            <div style="font-size:11px;opacity:0.45;color:var(--text-color);margin-bottom:5px;text-align:center;">Nodo Doble</div>
-                            <div class="demo-ctx-menu">
-                                <div class="demo-ctx-item">Conectar Próximo</div>
-                                <div class="demo-ctx-item">Conectar Anterior</div>
-                                <div class="demo-ctx-item">Eliminar Salidas</div>
-                                <div class="demo-ctx-item">Eliminar Elemento</div>
-                            </div>
-                        </div>
-                        <div>
-                            <div style="font-size:11px;opacity:0.45;color:var(--text-color);margin-bottom:5px;text-align:center;">NIL</div>
-                            <div class="demo-ctx-menu">
-                                <div class="demo-ctx-item">Eliminar Elemento</div>
-                            </div>
-                        </div>
-                    </div>`;
+            title: 'Ejemplo: lista simple',
+            desc: 'Un <strong>puntero Head</strong> apunta al primer nodo, los nodos se conectan en cadena, y el ultimo apunta a <strong>NIL</strong>.',
+            visual: function() {
+                return '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;">'
+                     + '<div class="demo-ptr-node">Head</div>'
+                     + '<div class="demo-arrow">&#8594;</div>'
+                     + '<div class="demo-node"><div class="demo-data">10</div><div class="demo-ptr"><div class="demo-ptr-dot"></div></div></div>'
+                     + '<div class="demo-arrow">&#8594;</div>'
+                     + '<div class="demo-node"><div class="demo-data">20</div><div class="demo-ptr"><div class="demo-ptr-dot"></div></div></div>'
+                     + '<div class="demo-arrow">&#8594;</div>'
+                     + '<div class="demo-nil">=</div>'
+                     + '</div>'
+                     + '<div class="demo-label">Head &rarr; 10 &rarr; 20 &rarr; NIL</div>';
             }
         },
         {
-            title: 'Ejemplo: lista enlazada simple',
-            desc: 'Una lista típica se construye así: un <strong>puntero Head</strong> apunta al primer nodo, los nodos se conectan en cadena con <em>Conectar Próximo</em>, y el último nodo apunta a un <strong>NIL</strong> que indica el fin de la lista.',
-            visual() {
-                return `
-                    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;">
-                        <div class="demo-ptr-node">Head</div>
-                        <div class="demo-arrow">→</div>
-                        <div class="demo-node">
-                            <div class="demo-data">10</div>
-                            <div class="demo-ptr"><div class="demo-ptr-dot"></div></div>
-                        </div>
-                        <div class="demo-arrow">→</div>
-                        <div class="demo-node">
-                            <div class="demo-data">20</div>
-                            <div class="demo-ptr"><div class="demo-ptr-dot"></div></div>
-                        </div>
-                        <div class="demo-arrow">→</div>
-                        <div class="demo-nil">=</div>
-                    </div>
-                    <div class="demo-label">Head → 10 → 20 → NIL</div>`;
+            title: 'Ejemplo: lista doble',
+            desc: 'Con nodos dobles podes conectar en ambas direcciones usando <em>Conectar Proximo</em> y <em>Conectar Anterior</em>.',
+            visual: function() {
+                return '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:center;">'
+                     + '<div class="demo-double-node"><div class="demo-side"><div class="demo-ptr-dot"></div></div><div class="demo-center">1</div><div class="demo-side"><div class="demo-ptr-dot"></div></div></div>'
+                     + '<div style="display:flex;flex-direction:column;gap:4px;align-items:center;"><span style="font-size:16px;color:var(--ptr-border);">&#8594;</span><span style="font-size:16px;color:var(--ptr-border);">&#8592;</span></div>'
+                     + '<div class="demo-double-node"><div class="demo-side"><div class="demo-ptr-dot"></div></div><div class="demo-center">2</div><div class="demo-side"><div class="demo-ptr-dot"></div></div></div>'
+                     + '<div style="display:flex;flex-direction:column;gap:4px;align-items:center;"><span style="font-size:16px;color:var(--ptr-border);">&#8594;</span><span style="font-size:16px;color:var(--ptr-border);">&#8592;</span></div>'
+                     + '<div class="demo-double-node"><div class="demo-side"><div class="demo-ptr-dot"></div></div><div class="demo-center">3</div><div class="demo-side"><div class="demo-ptr-dot"></div></div></div>'
+                     + '</div>'
+                     + '<div class="demo-label">Conexiones bidireccionales</div>';
             }
         },
         {
-            title: 'Ejemplo: lista doblemente enlazada',
-            desc: 'Con nodos dobles podés conectar en ambas direcciones: usá <em>Conectar Próximo</em> para la flecha hacia la derecha y <em>Conectar Anterior</em> para la flecha hacia la izquierda.',
-            visual() {
-                return `
-                    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:center;">
-                        <div class="demo-double-node">
-                            <div class="demo-side"><div class="demo-ptr-dot"></div></div>
-                            <div class="demo-center">1</div>
-                            <div class="demo-side"><div class="demo-ptr-dot"></div></div>
-                        </div>
-                        <div style="display:flex;flex-direction:column;gap:4px;align-items:center;">
-                            <span style="font-size:16px;color:var(--ptr-border);">→</span>
-                            <span style="font-size:16px;color:var(--ptr-border);">←</span>
-                        </div>
-                        <div class="demo-double-node">
-                            <div class="demo-side"><div class="demo-ptr-dot"></div></div>
-                            <div class="demo-center">2</div>
-                            <div class="demo-side"><div class="demo-ptr-dot"></div></div>
-                        </div>
-                        <div style="display:flex;flex-direction:column;gap:4px;align-items:center;">
-                            <span style="font-size:16px;color:var(--ptr-border);">→</span>
-                            <span style="font-size:16px;color:var(--ptr-border);">←</span>
-                        </div>
-                        <div class="demo-double-node">
-                            <div class="demo-side"><div class="demo-ptr-dot"></div></div>
-                            <div class="demo-center">3</div>
-                            <div class="demo-side"><div class="demo-ptr-dot"></div></div>
-                        </div>
-                    </div>
-                    <div class="demo-label">Conexiones bidireccionales entre nodos</div>`;
-            }
-        },
-        {
-            title: '¡Listo para empezar!',
-            desc: 'Ya conocés todo lo que necesitás para usar el simulador. Podés consultar esta guía en cualquier momento desde el botón <strong>?</strong> en la barra de herramientas.<br><br>Elegí un modo y empezá a construir tus estructuras.',
-            visual() {
-                return `
-                    <div style="font-size:52px;text-align:center;padding:10px 0;">🎉</div>
-                    <div style="font-size:14px;text-align:center;color:var(--text-color);opacity:0.6;margin-top:4px;">
-                        Nodo Simple · Nodo Doble · Puntero · NIL
-                    </div>`;
+            title: 'Listo para empezar!',
+            desc: 'Ya sabes todo lo necesario. Podes consultar esta guia en cualquier momento con el boton <strong>?</strong> en la barra.<br><br>Elegi un modo y empieza a construir.',
+            visual: function() {
+                return '<div style="font-size:52px;text-align:center;padding:10px 0;">&#127881;</div>'
+                     + '<div style="font-size:14px;text-align:center;color:var(--text-color);opacity:0.6;margin-top:4px;">Nodo Simple &middot; Nodo Doble &middot; Puntero &middot; NIL</div>';
             }
         }
     ],
 
-    open() {
-        this.step = 0;
+    open: function() {
+        Tutorial.step = 0;
         document.getElementById('tut-overlay').classList.add('open');
-        this._render();
+        Tutorial._render();
     },
 
-    close() {
+    close: function() {
         document.getElementById('tut-overlay').classList.remove('open');
     },
 
-    closeOnOverlay(e) {
-        if (e.target.id === 'tut-overlay') this.close();
+    prev: function() {
+        if (Tutorial.step > 0) { Tutorial.step--; Tutorial._render(); }
     },
 
-    prev() {
-        if (this.step > 0) { this.step--; this._render(); }
-    },
-
-    next() {
-        if (this.step < this.steps.length - 1) {
-            this.step++;
-            this._render();
+    next: function() {
+        if (Tutorial.step < Tutorial.steps.length - 1) {
+            Tutorial.step++;
+            Tutorial._render();
         } else {
-            this.close();
+            Tutorial.close();
         }
     },
 
-    _render() {
-        const s = this.steps[this.step];
-        const total = this.steps.length;
+    _render: function() {
+        var s     = Tutorial.steps[Tutorial.step];
+        var total = Tutorial.steps.length;
 
-        document.getElementById('tut-visual').innerHTML = s.visual();
+        document.getElementById('tut-visual').innerHTML     = s.visual();
         document.getElementById('tut-step-title').textContent = s.title;
-        document.getElementById('tut-step-desc').innerHTML = s.desc;
+        document.getElementById('tut-step-desc').innerHTML  = s.desc;
 
-        const dotsEl = document.getElementById('tut-steps-indicator');
+        var dotsEl = document.getElementById('tut-steps-indicator');
         dotsEl.innerHTML = '';
-        this.steps.forEach((_, i) => {
-            const d = document.createElement('div');
-            d.className = 'tut-dot' + (i === this.step ? ' active' : '');
+        Tutorial.steps.forEach(function(_, i) {
+            var d = document.createElement('div');
+            d.className = 'tut-dot' + (i === Tutorial.step ? ' active' : '');
             dotsEl.appendChild(d);
         });
 
-        document.getElementById('tut-counter').textContent = `${this.step + 1} / ${total}`;
-        document.getElementById('tut-prev').disabled = this.step === 0;
+        document.getElementById('tut-counter').textContent = (Tutorial.step + 1) + ' / ' + total;
+        document.getElementById('tut-prev').disabled = Tutorial.step === 0;
 
-        const nextBtn = document.getElementById('tut-next');
-        const isLast = this.step === total - 1;
-        nextBtn.textContent = isLast ? 'Comenzar ✓' : 'Siguiente →';
+        var nextBtn = document.getElementById('tut-next');
+        var isLast  = Tutorial.step === total - 1;
+        nextBtn.textContent = isLast ? 'Comenzar \u2713' : 'Siguiente \u2192';
         nextBtn.classList.toggle('finish', isLast);
     }
 };
+
+/**
+ * INICIALIZACIÓN — todo arranca aquí, sin depender del orden de carga
+ */
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Menú inicial
+    document.getElementById('card-simple').addEventListener('click', function() { App.start('simple'); });
+    document.getElementById('card-double').addEventListener('click', function() { App.start('double'); });
+    document.getElementById('card-tutorial').addEventListener('click', function() { Tutorial.open(); });
+
+    // Toolbar
+    document.getElementById('back-to-menu').addEventListener('click', function() { App.reset(); });
+    document.getElementById('btn-ptr').addEventListener('click', function() { Nodes.create('ptr'); });
+    document.getElementById('btn-nil').addEventListener('click', function() { Nodes.create('nil'); });
+    document.getElementById('btn-theme').addEventListener('click', function() { UI.toggleTheme(); });
+    document.getElementById('btn-help').addEventListener('click', function() { Tutorial.open(); });
+
+    // Tutorial — botones de navegación
+    document.getElementById('tut-close').addEventListener('click', function() { Tutorial.close(); });
+    document.getElementById('tut-prev').addEventListener('click', function() { Tutorial.prev(); });
+    document.getElementById('tut-next').addEventListener('click', function() { Tutorial.next(); });
+    document.getElementById('tut-overlay').addEventListener('click', function(e) {
+        if (e.target.id === 'tut-overlay') Tutorial.close();
+    });
+
+    // Cierre del menú contextual al hacer clic fuera
+    document.addEventListener('click', function(e) {
+        var menu = document.getElementById('context-menu');
+        if (menu && !menu.contains(e.target)) {
+            menu.style.display = 'none';
+        }
+    });
+});
