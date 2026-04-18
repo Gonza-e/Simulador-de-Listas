@@ -14,20 +14,25 @@ const State = {
 
 /**
  * MOTOR DE RENDERIZADO (FLECHAS)
+ * svg se lee lazy para evitar null cuando el script carga antes del DOM
  */
 const Renderer = {
-    svg: document.getElementById('svg-layer'),
+    get svg() { return document.getElementById('svg-layer'); },
 
     getArrowColor() {
         return document.body.classList.contains('dark-neon') ? '#bf5fff' : '#9b59b6';
     },
 
     update() {
-        this.svg.innerHTML = '';
+        const svg = this.svg;
+        if (!svg) return;
+        svg.innerHTML = '';
         State.connections.forEach(conn => this.drawConnection(conn));
     },
 
     drawConnection(conn) {
+        const svg = this.svg;
+        if (!svg) return;
         const f = document.getElementById(conn.from);
         const t = document.getElementById(conn.to);
         if (!f || !t) return;
@@ -63,8 +68,8 @@ const Renderer = {
         dot.setAttribute('r', '5');
         dot.setAttribute('fill', color);
 
-        this.svg.appendChild(path);
-        this.svg.appendChild(dot);
+        svg.appendChild(path);
+        svg.appendChild(dot);
     },
 
     getIntersection(sx, sy, el) {
@@ -96,7 +101,7 @@ const Renderer = {
  * GESTIÓN DE NODOS
  */
 const Nodes = {
-    world: document.getElementById('world'),
+    get world() { return document.getElementById('world'); },
 
     create(type) {
         const id = 'el-' + Date.now();
@@ -152,7 +157,7 @@ const Nodes = {
  * INTERFAZ Y APLICACIÓN
  */
 const UI = {
-    menu: document.getElementById('context-menu'),
+    get menu() { return document.getElementById('context-menu'); },
 
     toggleTheme() {
         const isDark = document.body.classList.toggle('dark-neon');
@@ -176,25 +181,39 @@ const UI = {
             }
         };
         window.onmouseup = () => { State.isPanning = false; State.currentDrag = null; };
-        document.getElementById('viewport').onmousedown = (e) => { if (e.target.id === 'viewport') State.isPanning = true; };
-        window.onclick = () => this.menu.style.display = 'none';
+        document.getElementById('viewport').onmousedown = (e) => {
+            if (e.target.id === 'viewport') State.isPanning = true;
+        };
 
-        document.getElementById('m-del').onclick = () => {
+        document.getElementById('m-del').onclick = (e) => {
+            e.stopPropagation();
             State.connections = State.connections.filter(c => c.from !== State.contextTargetId && c.to !== State.contextTargetId);
-            document.getElementById(State.contextTargetId).remove(); Renderer.update();
+            document.getElementById(State.contextTargetId).remove();
+            Renderer.update();
         };
-        document.getElementById('m-dis').onclick = () => {
-            State.connections = State.connections.filter(c => c.from !== State.contextTargetId); Renderer.update();
+        document.getElementById('m-dis').onclick = (e) => {
+            e.stopPropagation();
+            State.connections = State.connections.filter(c => c.from !== State.contextTargetId);
+            Renderer.update();
         };
-        document.getElementById('m-con-next').onclick = () => { State.connectingFromId = State.contextTargetId; State.currentPort = 'next'; };
-        document.getElementById('m-con-prev').onclick = () => { State.connectingFromId = State.contextTargetId; State.currentPort = 'prev'; };
+        document.getElementById('m-con-next').onclick = (e) => {
+            e.stopPropagation();
+            State.connectingFromId = State.contextTargetId;
+            State.currentPort = 'next';
+        };
+        document.getElementById('m-con-prev').onclick = (e) => {
+            e.stopPropagation();
+            State.connectingFromId = State.contextTargetId;
+            State.currentPort = 'prev';
+        };
     },
 
     showContextMenu(x, y, el) {
+        const menu = this.menu;
         State.contextTargetId = el.id;
-        this.menu.style.display = 'block';
-        this.menu.style.left = x + 'px';
-        this.menu.style.top  = y + 'px';
+        menu.style.display = 'block';
+        menu.style.left = x + 'px';
+        menu.style.top  = y + 'px';
 
         const isNil    = el.classList.contains('nil-node');
         const isPtr    = el.classList.contains('ptr-circle');
@@ -229,6 +248,18 @@ const App = {
     },
     reset() { if (confirm('¿Seguro que quieres volver al menú?')) location.reload(); }
 };
+
+/**
+ * CIERRE GLOBAL DEL MENÚ CONTEXTUAL
+ * Se registra desde el inicio (no depende de UI.init) para que funcione
+ * también antes de elegir modo (ej: durante el tutorial)
+ */
+document.addEventListener('click', (e) => {
+    const menu = document.getElementById('context-menu');
+    if (menu && !menu.contains(e.target)) {
+        menu.style.display = 'none';
+    }
+});
 
 /**
  * ============================================================
@@ -393,7 +424,7 @@ const Tutorial = {
         },
         {
             title: 'Ejemplo: lista doblemente enlazada',
-            desc: 'Con nodos dobles podés conectar en ambas direcciones: usá <em>Conectar Próximo</em> para la flecha hacia la derecha y <em>Conectar Anterior</em> para la flecha hacia la izquierda. Esto te permite recorrer la lista en ambos sentidos.',
+            desc: 'Con nodos dobles podés conectar en ambas direcciones: usá <em>Conectar Próximo</em> para la flecha hacia la derecha y <em>Conectar Anterior</em> para la flecha hacia la izquierda.',
             visual() {
                 return `
                     <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:center;">
@@ -468,14 +499,10 @@ const Tutorial = {
         const s = this.steps[this.step];
         const total = this.steps.length;
 
-        // Visual
         document.getElementById('tut-visual').innerHTML = s.visual();
-
-        // Texto
         document.getElementById('tut-step-title').textContent = s.title;
         document.getElementById('tut-step-desc').innerHTML = s.desc;
 
-        // Dots
         const dotsEl = document.getElementById('tut-steps-indicator');
         dotsEl.innerHTML = '';
         this.steps.forEach((_, i) => {
@@ -484,7 +511,6 @@ const Tutorial = {
             dotsEl.appendChild(d);
         });
 
-        // Navegación
         document.getElementById('tut-counter').textContent = `${this.step + 1} / ${total}`;
         document.getElementById('tut-prev').disabled = this.step === 0;
 
