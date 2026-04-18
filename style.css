@@ -19,10 +19,13 @@
     --menu-item-hover: #f0f7ff;
     --mode-selector-bg: rgba(248, 249, 250, 0.98);
     --menu-card-bg: white;
-    --arrow-color: #9b59b6;
+    --tut-card-bg: white;
+    --tut-border: #eee;
+    --tut-visual-bg: #f4f8ff;
+    --tut-dot: #dde3ea;
+    --tut-dot-active: #3498db;
 }
 
-/* ===== DARK NEON THEME ===== */
 body.dark-neon {
     --node-data-bg: #0d1b2e;
     --node-data-border: #00d4ff;
@@ -44,147 +47,304 @@ body.dark-neon {
     --menu-item-hover: #0d2a45;
     --mode-selector-bg: rgba(8, 13, 20, 0.98);
     --menu-card-bg: #0f1923;
-    --arrow-color: #bf5fff;
+    --tut-card-bg: #0f1923;
+    --tut-border: #1e3a5f;
+    --tut-visual-bg: #0a1520;
+    --tut-dot: #1e3a5f;
+    --tut-dot-active: #00d4ff;
 }
 
-body, html { 
-    margin: 0; padding: 0; width: 100%; height: 100%; 
+body, html {
+    margin: 0; padding: 0; width: 100%; height: 100%;
     overflow: hidden; background: var(--bg-main); font-family: 'Segoe UI', sans-serif;
     transition: background 0.3s;
 }
 
-/* --- MENÚ INICIAL --- */
+/* ── MENÚ INICIAL ── */
 #mode-selector {
     position: fixed; inset: 0; background: var(--mode-selector-bg);
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    z-index: 5000; gap: 30px;
+    z-index: 5000; gap: 16px;
 }
-#mode-selector h1 { color: var(--text-color); }
-.menu-container { display: flex; gap: 20px; }
-.menu-card {
-    background: var(--menu-card-bg); padding: 40px; border-radius: 20px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.25); text-align: center;
-    cursor: pointer; transition: all 0.3s; width: 250px; border: 2px solid transparent;
-    color: var(--text-color);
-}
-.menu-card:hover { transform: translateY(-10px); border-color: var(--ptr-border); }
-.menu-card h2 { margin: 0 0 10px 0; color: var(--text-color); }
-.menu-card p { color: var(--text-color); opacity: 0.7; }
+#mode-selector h1 { color: var(--text-color); margin: 0; font-size: 28px; }
+.menu-subtitle { color: var(--text-color); opacity: 0.5; margin: 0; font-size: 14px; }
 
-/* --- INTERFAZ --- */
+.menu-container { display: flex; gap: 20px; margin-top: 10px; flex-wrap: wrap; justify-content: center; }
+
+.menu-card {
+    background: var(--menu-card-bg); padding: 36px 30px; border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center;
+    cursor: pointer; transition: all 0.25s; width: 200px; border: 2px solid transparent;
+}
+.menu-card:hover { transform: translateY(-8px); border-color: var(--ptr-border); }
+.menu-card-icon { font-size: 28px; margin-bottom: 12px; color: var(--node-data-border); }
+.menu-card h2 { margin: 0 0 8px; color: var(--text-color); font-size: 17px; }
+.menu-card p  { margin: 0; color: var(--text-color); opacity: 0.55; font-size: 13px; }
+
+.menu-card-tutorial .menu-card-icon { color: var(--ptr-border); }
+.menu-card-tutorial:hover { border-color: var(--node-data-border); }
+
+/* ── TOOLBAR ── */
 #back-to-menu {
     position: fixed; top: 20px; left: 20px; z-index: 4000;
     background: var(--back-btn-bg); width: 45px; height: 45px; border-radius: 50%;
     display: none; align-items: center; justify-content: center;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.2); cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1); cursor: pointer;
     font-size: 24px; color: var(--text-color); border: 1px solid var(--back-btn-border);
-    transition: background 0.3s, border-color 0.3s, color 0.3s;
+    transition: background 0.3s, border-color 0.3s;
 }
-
 #toolbar {
     position: fixed; top: 20px; left: 80px; z-index: 2000;
-    background: var(--toolbar-bg); padding: 12px; border-radius: 12px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.15); display: none; gap: 10px;
-    border: 1px solid var(--toolbar-border);
+    background: var(--toolbar-bg); padding: 10px 14px; border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08); display: none; gap: 8px;
+    border: 1px solid var(--toolbar-border); align-items: center;
     transition: background 0.3s, border-color 0.3s;
-    align-items: center;
 }
+.toolbar-sep { width: 1px; height: 24px; background: var(--toolbar-border); margin: 0 2px; }
+
 input {
     padding: 8px 12px; border: 1px solid var(--input-border); border-radius: 6px;
     outline: none; background: var(--input-bg); color: var(--input-color);
     transition: background 0.3s, border-color 0.3s, color 0.3s;
 }
-button { padding: 8px 16px; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; }
+button { padding: 8px 14px; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; }
 #btnSpawn { background: var(--node-data-border); }
-.btn-ptr { background: var(--ptr-border); }
-.btn-nil { background: var(--nil-border); }
+.btn-ptr  { background: var(--ptr-border); }
+.btn-nil  { background: var(--nil-border); }
 
-/* Botón de tema */
 #btn-theme {
-    background: transparent;
-    border: 1px solid var(--input-border) !important;
-    color: var(--text-color) !important;
-    font-size: 16px;
-    padding: 6px 10px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: border-color 0.3s, color 0.3s;
-    line-height: 1;
+    background: transparent; border: 1px solid var(--input-border) !important;
+    color: var(--text-color) !important; font-size: 15px; padding: 6px 9px;
+    border-radius: 6px; cursor: pointer; transition: border-color 0.3s, color 0.3s; line-height: 1;
 }
 body.dark-neon #btn-theme { border-color: var(--ptr-border) !important; }
 
-/* --- LIENZO Y NODOS --- */
+#btn-help {
+    background: transparent; border: 1px solid var(--input-border) !important;
+    color: var(--text-color) !important; font-size: 15px; font-weight: 700;
+    padding: 5px 10px; border-radius: 6px; cursor: pointer;
+    transition: border-color 0.3s, color 0.3s;
+}
+#btn-help:hover { border-color: var(--ptr-border) !important; color: var(--ptr-border) !important; }
+
+/* ── LIENZO ── */
 #viewport { width: 100vw; height: 100vh; cursor: grab; position: relative; overflow: hidden; }
 #viewport:active { cursor: grabbing; }
 #world { position: absolute; top: 0; left: 0; transform-origin: 0 0; }
 .element { position: absolute; display: flex; z-index: 10; user-select: none; }
 
-.node-rect { width: 160px; height: 50px; border-radius: 8px; overflow: hidden; }
+.node-rect   { width: 160px; height: 50px; border-radius: 8px; overflow: hidden; }
 .node-double { width: 200px; height: 50px; border-radius: 8px; overflow: hidden; }
 
-.side-ptr { flex: 1; background: var(--ptr-bg); border: 2px dashed var(--ptr-border); display: flex; align-items: center; justify-content: center; }
+.side-ptr  { flex: 1; background: var(--ptr-bg); border: 2px dashed var(--ptr-border); display: flex; align-items: center; justify-content: center; }
 .data-core { flex: 2; background: var(--node-data-bg); color: var(--node-data-border); border: 2px dashed var(--node-data-border); display: flex; align-items: center; justify-content: center; font-weight: bold; }
-.ptr-dot { width: 10px; height: 10px; background: var(--ptr-border); border-radius: 50%; }
+.ptr-dot   { width: 10px; height: 10px; background: var(--ptr-border); border-radius: 50%; }
 
-/* Estilo base compartido */
-.ptr-circle, .nil-node { 
-    height: 50px; 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    font-weight: bold; 
-    transition: none !important;
+.ptr-circle, .nil-node {
+    height: 50px; display: flex; align-items: center; justify-content: center;
+    font-weight: bold; transition: none !important;
+}
+.ptr-circle {
+    min-width: 50px; width: max-content; height: 50px; padding: 0 15px;
+    border-radius: 25px; background: var(--ptr-bg); border: 2px dashed var(--ptr-border);
+    color: var(--ptr-border); display: flex; align-items: center; justify-content: center;
+    white-space: nowrap; box-sizing: border-box; position: absolute;
+    transition: none !important; transform: translateZ(0); will-change: left, top;
+}
+.nil-node {
+    width: 45px; height: 45px; border-radius: 50%;
+    background: var(--nil-bg); border: 2px dashed var(--nil-border);
+    color: var(--nil-border); font-size: 22px;
 }
 
-/* Puntero Dinámico */
-.ptr-circle { 
-    min-width: 50px;
-    width: max-content;
-    height: 50px; 
-    padding: 0 15px; 
-    border-radius: 25px; 
-    background: var(--ptr-bg); 
-    border: 2px dashed var(--ptr-border);
-    color: var(--ptr-border); 
-    font-weight: bold; 
-    display: flex; 
-    align-items: center; 
-    justify-content: center;
-    white-space: nowrap; 
-    box-sizing: border-box;
-    position: absolute;
-    transition: none !important; 
-    transform: translateZ(0);
-    will-change: left, top;
-}
-
-/* Nodo NIL */
-.nil-node { 
-    width: 45px; 
-    height: 45px; 
-    border-radius: 50%;
-    background: var(--nil-bg); 
-    border: 2px dashed var(--nil-border); 
-    color: var(--nil-border); 
-    font-size: 22px; 
-}
-
-/* Efecto neon en dark mode: borde brillante sutil */
-body.dark-neon .side-ptr { box-shadow: inset 0 0 6px rgba(191, 95, 255, 0.15); }
-body.dark-neon .data-core { box-shadow: inset 0 0 6px rgba(0, 212, 255, 0.15); }
-body.dark-neon .ptr-circle { box-shadow: 0 0 8px rgba(191, 95, 255, 0.3); }
-body.dark-neon .nil-node { box-shadow: 0 0 8px rgba(255, 140, 0, 0.3); }
+body.dark-neon .side-ptr   { box-shadow: inset 0 0 6px rgba(191,95,255,0.15); }
+body.dark-neon .data-core  { box-shadow: inset 0 0 6px rgba(0,212,255,0.15); }
+body.dark-neon .ptr-circle { box-shadow: 0 0 8px rgba(191,95,255,0.3); }
+body.dark-neon .nil-node   { box-shadow: 0 0 8px rgba(255,140,0,0.3); }
 
 #svg-layer { position: absolute; top: -5000px; left: -5000px; width: 15000px; height: 15000px; pointer-events: none; z-index: 5; }
 
-/* --- MENÚS Y TOASTS --- */
+/* ── MENÚ CONTEXTUAL ── */
 #context-menu {
     position: fixed; display: none; background: var(--context-menu-bg);
-    border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.15);
     z-index: 5000; border: 1px solid var(--context-menu-border);
-    transition: background 0.3s, border-color 0.3s;
 }
 .menu-item { padding: 10px 20px; cursor: pointer; font-size: 13px; color: var(--text-color); }
 .menu-item:hover { background: var(--menu-item-hover); }
 .toast { background: #2c3e50; color: white; padding: 10px 15px; border-radius: 8px; margin-bottom: 5px; font-size: 13px; }
 body.dark-neon .toast { background: #1a0d2e; border: 1px solid var(--ptr-border); }
+
+/* ══════════════════════════════════
+   MODAL TUTORIAL
+══════════════════════════════════ */
+#tut-overlay {
+    position: fixed; inset: 0; z-index: 9000;
+    background: rgba(0,0,0,0.5);
+    display: none; align-items: center; justify-content: center;
+}
+#tut-overlay.open { display: flex; }
+
+#tut-modal {
+    background: var(--tut-card-bg);
+    border: 1px solid var(--tut-border);
+    border-radius: 20px;
+    width: 500px; max-width: 94vw;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.3);
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    animation: tutIn 0.2s ease-out;
+}
+@keyframes tutIn {
+    from { opacity: 0; transform: scale(0.95) translateY(10px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+#tut-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 22px 14px;
+    border-bottom: 1px solid var(--tut-border);
+}
+#tut-title { font-size: 16px; font-weight: 700; color: var(--text-color); }
+#tut-close {
+    background: transparent; border: none; color: var(--text-color);
+    font-size: 18px; cursor: pointer; opacity: 0.4; padding: 0; font-weight: 300; line-height: 1;
+}
+#tut-close:hover { opacity: 1; }
+
+/* Dots indicadores de paso */
+#tut-steps-indicator {
+    display: flex; justify-content: center; gap: 7px;
+    padding: 14px 0 0;
+}
+.tut-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--tut-dot); transition: background 0.2s, transform 0.2s;
+}
+.tut-dot.active {
+    background: var(--tut-dot-active);
+    transform: scale(1.35);
+}
+
+/* Área visual del paso */
+#tut-body { padding: 20px 24px 10px; }
+
+#tut-visual {
+    background: var(--tut-visual-bg);
+    border-radius: 12px;
+    min-height: 140px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 18px;
+    padding: 18px;
+    border: 1px solid var(--tut-border);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Elementos de demostración dentro del visual */
+.demo-node {
+    display: flex; border-radius: 8px; overflow: hidden;
+    height: 46px; font-weight: bold; font-size: 13px;
+}
+.demo-data {
+    background: var(--node-data-bg); color: var(--node-data-border);
+    border: 2px dashed var(--node-data-border); border-right: none;
+    border-radius: 8px 0 0 8px;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0 16px; min-width: 52px;
+}
+.demo-ptr {
+    background: var(--ptr-bg); border: 2px dashed var(--ptr-border);
+    border-radius: 0 8px 8px 0;
+    display: flex; align-items: center; justify-content: center;
+    width: 36px;
+}
+.demo-ptr-dot {
+    width: 9px; height: 9px; background: var(--ptr-border); border-radius: 50%;
+}
+.demo-ptr-node {
+    min-width: 50px; padding: 0 14px; height: 46px;
+    border-radius: 23px; background: var(--ptr-bg);
+    border: 2px dashed var(--ptr-border); color: var(--ptr-border);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: bold; font-size: 13px;
+}
+.demo-nil {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--nil-bg); border: 2px dashed var(--nil-border);
+    color: var(--nil-border); font-size: 18px;
+    display: flex; align-items: center; justify-content: center; font-weight: bold;
+}
+.demo-arrow {
+    display: flex; align-items: center;
+    color: var(--ptr-border); font-size: 20px; padding: 0 6px;
+    font-weight: bold;
+}
+.demo-double-node {
+    display: flex; border-radius: 8px; overflow: hidden; height: 46px;
+}
+.demo-side {
+    background: var(--ptr-bg); border: 2px dashed var(--ptr-border);
+    display: flex; align-items: center; justify-content: center; width: 34px;
+}
+.demo-side:first-child { border-right: none; border-radius: 8px 0 0 8px; }
+.demo-side:last-child  { border-left: none; border-radius: 0 8px 8px 0; }
+.demo-center {
+    background: var(--node-data-bg); color: var(--node-data-border);
+    border: 2px dashed var(--node-data-border); border-left: none; border-right: none;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0 14px; font-weight: bold; font-size: 13px;
+}
+.demo-ctx-menu {
+    background: var(--tut-card-bg); border: 1px solid var(--tut-border);
+    border-radius: 8px; padding: 4px 0; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    font-size: 12px;
+}
+.demo-ctx-item {
+    padding: 7px 16px; color: var(--text-color); white-space: nowrap;
+}
+.demo-ctx-item.highlight {
+    background: var(--menu-item-hover); color: var(--node-data-border);
+    font-weight: 600;
+}
+.demo-label {
+    font-size: 11px; color: var(--text-color); opacity: 0.5;
+    text-align: center; margin-top: 10px; position: absolute;
+    bottom: 8px; left: 0; right: 0;
+}
+.demo-kbd {
+    display: inline-block;
+    background: var(--tut-visual-bg); border: 1px solid var(--tut-border);
+    border-radius: 5px; padding: 3px 9px; font-family: monospace;
+    font-size: 13px; color: var(--text-color); margin: 0 3px;
+}
+.demo-drag-hint {
+    font-size: 36px; color: var(--ptr-border); opacity: 0.7;
+}
+
+#tut-step-title {
+    font-size: 17px; font-weight: 700; color: var(--text-color);
+    margin-bottom: 8px;
+}
+#tut-step-desc {
+    font-size: 14px; color: var(--text-color); opacity: 0.7;
+    line-height: 1.65;
+}
+
+/* Navegación del tutorial */
+#tut-nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 22px 20px;
+    border-top: 1px solid var(--tut-border); margin-top: 14px;
+}
+#tut-prev, #tut-next {
+    background: transparent; border: 1px solid var(--tut-border) !important;
+    color: var(--text-color) !important; border-radius: 8px;
+    padding: 8px 18px; font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: background 0.15s, border-color 0.15s;
+}
+#tut-prev:hover, #tut-next:hover { background: var(--menu-item-hover); border-color: var(--node-data-border) !important; }
+#tut-prev:disabled { opacity: 0.25; cursor: default; }
+#tut-prev:disabled:hover { background: transparent; }
+#tut-next.finish { background: var(--ptr-border); border-color: var(--ptr-border) !important; color: white !important; }
+#tut-counter { font-size: 12px; color: var(--text-color); opacity: 0.45; }
