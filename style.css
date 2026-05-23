@@ -450,3 +450,10 @@ body.dark-neon .toast { background: #1a0d2e; border: 1px solid var(--ptr-border)
         -webkit-touch-callout: none;
     }
 }
+
+/* Ítem de menú deshabilitado */
+.menu-item.disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    pointer-events: none;
+}

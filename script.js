@@ -320,6 +320,30 @@ const UI = {
             State.connectingFromId = State.contextTargetId;
             State.currentPort = 'prev';
         });
+
+        document.getElementById('m-ptr-advance').addEventListener('click', function(e) {
+            e.stopPropagation();
+            document.getElementById('context-menu').style.display = 'none';
+
+            // Buscar a qué nodo apunta actualmente el puntero (conexión next del puntero)
+            var ptrConn = State.connections.find(function(c) {
+                return c.from === State.contextTargetId && c.port === 'next';
+            });
+            if (!ptrConn) return;
+
+            // Buscar la conexión next del nodo destino actual (el "siguiente")
+            var nextConn = State.connections.find(function(c) {
+                return c.from === ptrConn.to && c.port === 'next';
+            });
+            if (!nextConn) return; // no hay siguiente, no hacemos nada
+
+            // Reemplazar: el puntero ahora apunta al siguiente nodo
+            State.connections = State.connections.filter(function(c) {
+                return !(c.from === State.contextTargetId && c.port === 'next');
+            });
+            State.connections.push({ from: State.contextTargetId, to: nextConn.to, port: 'next' });
+            Renderer.update();
+        });
     },
 
     showContextMenu(x, y, el) {
@@ -336,17 +360,41 @@ const UI = {
         var btnNext = document.getElementById('m-con-next');
         var btnDis  = document.getElementById('m-dis');
 
+        var btnAdvance = document.getElementById('m-ptr-advance');
+
         if (isPtr) {
-            btnNext.textContent    = 'Realizar Conexion';
-            btnNext.style.display  = 'block';
-            btnDis.style.display   = 'block';
+            btnNext.textContent   = 'Realizar Conexion';
+            btnNext.style.display = 'block';
+            btnDis.style.display  = 'block';
+
+            // Mostrar "Avanzar al siguiente nodo" solo para punteros
+            btnAdvance.style.display = 'block';
+
+            // Verificar si hay un siguiente nodo disponible para avanzar
+            var ptrConn = State.connections.find(function(c) {
+                return c.from === el.id && c.port === 'next';
+            });
+            var canAdvance = false;
+            if (ptrConn) {
+                var nextConn = State.connections.find(function(c) {
+                    return c.from === ptrConn.to && c.port === 'next';
+                });
+                // Solo se puede avanzar si el siguiente no es NIL
+                if (nextConn && !document.getElementById(nextConn.to).classList.contains('nil-node')) {
+                    canAdvance = true;
+                }
+            }
+            btnAdvance.classList.toggle('disabled', !canAdvance);
+
         } else if (isNil) {
-            btnNext.style.display  = 'none';
-            btnDis.style.display   = 'none';
+            btnNext.style.display    = 'none';
+            btnDis.style.display     = 'none';
+            btnAdvance.style.display = 'none';
         } else {
-            btnNext.textContent    = 'Conectar Proximo (Derecha)';
-            btnNext.style.display  = 'block';
-            btnDis.style.display   = 'block';
+            btnNext.textContent      = 'Conectar Proximo (Derecha)';
+            btnNext.style.display    = 'block';
+            btnDis.style.display     = 'block';
+            btnAdvance.style.display = 'none';
         }
         document.getElementById('m-del').textContent = 'Eliminar Elemento';
         document.getElementById('m-con-prev').style.display = isDouble ? 'block' : 'none';

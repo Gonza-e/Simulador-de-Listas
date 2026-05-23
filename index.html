@@ -14,34 +14,34 @@
         <h1>Simulador de Listas</h1>
         <p class="menu-subtitle">Seleccioná el tipo de estructura para comenzar</p>
         <div class="menu-container">
-            <div class="menu-card" onclick="App.start('simple')">
-                <div class="menu-card-icon">→</div>
+            <div class="menu-card" id="card-simple">
+                <div class="menu-card-icon">&#8594;</div>
                 <h2>Nodo Simple</h2>
                 <p>Estructuras lineales simples.</p>
             </div>
-            <div class="menu-card" onclick="App.start('double')">
-                <div class="menu-card-icon">⇄</div>
+            <div class="menu-card" id="card-double">
+                <div class="menu-card-icon">&#8644;</div>
                 <h2>Nodo Doble</h2>
                 <p>Estructuras bidireccionales.</p>
             </div>
-            <div class="menu-card menu-card-tutorial" onclick="Tutorial.open()">
+            <div class="menu-card menu-card-tutorial" id="card-tutorial">
                 <div class="menu-card-icon">?</div>
-                <h2>¿Cómo usar?</h2>
-                <p>Guía paso a paso del simulador.</p>
+                <h2>Como usar?</h2>
+                <p>Guia paso a paso del simulador.</p>
             </div>
         </div>
     </div>
 
-    <div id="back-to-menu" title="Volver al menú" onclick="App.reset()">&#10229;</div>
+    <div id="back-to-menu" title="Volver al menu">&#10229;</div>
 
     <div id="toolbar">
         <input type="text" id="contentInput" placeholder="Valor...">
         <button id="btnSpawn"></button>
-        <button class="btn-ptr" onclick="Nodes.create('ptr')">Puntero</button>
-        <button class="btn-nil" onclick="Nodes.create('nil')">Nil</button>
+        <button id="btn-ptr" class="btn-ptr">Puntero</button>
+        <button id="btn-nil" class="btn-nil">Nil</button>
         <div class="toolbar-sep"></div>
-        <button id="btn-theme" title="Cambiar tema" onclick="UI.toggleTheme()">🌙</button>
-        <button id="btn-help" title="Ayuda" onclick="Tutorial.open()">?</button>
+        <button id="btn-theme" title="Cambiar tema">&#9790;</button>
+        <button id="btn-help" title="Ayuda">?</button>
     </div>
 
     <div id="toast-container"></div>
@@ -55,33 +55,28 @@
     <div id="context-menu">
         <div class="menu-item" id="m-con-next">Conectar</div>
         <div class="menu-item" id="m-con-prev">Conectar Anterior (Izquierda)</div>
+        <div class="menu-item" id="m-ptr-advance">Avanzar al siguiente nodo</div>
         <div class="menu-item" id="m-dis">Eliminar Salidas</div>
         <div class="menu-item" id="m-del">Eliminar Elemento</div>
     </div>
 
     <!-- MODAL TUTORIAL -->
-    <div id="tut-overlay" onclick="Tutorial.closeOnOverlay(event)">
+    <div id="tut-overlay">
         <div id="tut-modal">
             <div id="tut-header">
-                <span id="tut-title">Guía del Simulador</span>
-                <button id="tut-close" onclick="Tutorial.close()">✕</button>
+                <span id="tut-title">Guia del Simulador</span>
+                <button id="tut-close">&#10005;</button>
             </div>
-
-            <!-- Indicador de pasos -->
             <div id="tut-steps-indicator"></div>
-
-            <!-- Contenido del paso -->
             <div id="tut-body">
                 <div id="tut-visual"></div>
                 <div id="tut-step-title"></div>
                 <div id="tut-step-desc"></div>
             </div>
-
-            <!-- Navegación -->
             <div id="tut-nav">
-                <button id="tut-prev" onclick="Tutorial.prev()">← Anterior</button>
+                <button id="tut-prev">&#8592; Anterior</button>
                 <span id="tut-counter"></span>
-                <button id="tut-next" onclick="Tutorial.next()">Siguiente →</button>
+                <button id="tut-next">Siguiente &#8594;</button>
             </div>
         </div>
     </div>
