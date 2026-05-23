@@ -348,3 +348,105 @@ body.dark-neon .toast { background: #1a0d2e; border: 1px solid var(--ptr-border)
 #tut-prev:disabled:hover { background: transparent; }
 #tut-next.finish { background: var(--ptr-border); border-color: var(--ptr-border) !important; color: white !important; }
 #tut-counter { font-size: 12px; color: var(--text-color); opacity: 0.45; }
+
+/* ══════════════════════════════════
+   ADAPTACIÓN MÓVIL / TOUCH
+══════════════════════════════════ */
+@media (max-width: 768px) {
+    /* Toolbar más compacta y scrollable en horizontal */
+    #toolbar {
+        left: 10px;
+        top: 10px;
+        right: 10px;
+        width: auto;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        padding: 10px 12px;
+        gap: 8px;
+        border-radius: 12px;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Botón volver más pequeño */
+    #back-to-menu {
+        top: 10px;
+        left: 10px;
+        width: 40px;
+        height: 40px;
+        font-size: 20px;
+        display: none; /* se muestra igual via JS */
+    }
+
+    /* Cuando está la toolbar, el botón volver se ajusta */
+    #back-to-menu[style*="flex"] ~ #toolbar {
+        left: 58px;
+    }
+
+    /* Botones más grandes para dedos (mínimo 44px alto) */
+    button {
+        min-height: 44px;
+        padding: 0 14px;
+        font-size: 14px;
+        white-space: nowrap;
+        touch-action: manipulation; /* evita doble-tap zoom */
+    }
+
+    input {
+        min-height: 44px;
+        font-size: 16px; /* evita zoom automático en iOS */
+        min-width: 90px;
+        touch-action: manipulation;
+    }
+
+    /* Items del menú contextual más grandes */
+    .menu-item {
+        padding: 14px 22px;
+        font-size: 15px;
+    }
+
+    /* Menú contextual más ancho en móvil */
+    #context-menu {
+        min-width: 200px;
+    }
+
+    /* Modal tutorial ocupa más pantalla */
+    #tut-modal {
+        width: 96vw;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    #tut-visual {
+        min-height: 110px;
+    }
+
+    /* Cards del menú inicial en columna */
+    .menu-container {
+        flex-direction: column;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .menu-card {
+        width: 80vw;
+        max-width: 320px;
+        padding: 24px 20px;
+    }
+
+    /* Nodos un poco más altos para ser tocables */
+    .node-rect, .node-double {
+        height: 54px;
+    }
+
+    .nil-node, .ptr-circle {
+        min-width: 54px;
+        height: 54px;
+    }
+
+    /* Evitar selección de texto al tocar largo */
+    .element {
+        -webkit-user-select: none;
+        user-select: none;
+        -webkit-touch-callout: none;
+    }
+}

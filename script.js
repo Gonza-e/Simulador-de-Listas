@@ -136,6 +136,7 @@ const Nodes = {
     },
 
     bindEvents(div) {
+        // ── MOUSE ──
         div.addEventListener('mousedown', function(e) {
             if (e.button !== 0) return;
             e.stopPropagation();
@@ -161,6 +162,62 @@ const Nodes = {
             e.stopPropagation();
             UI.showContextMenu(e.clientX, e.clientY, div);
         });
+
+        // ── TOUCH ──
+        var longPressTimer = null;
+        var touchMoved = false;
+
+        div.addEventListener('touchstart', function(e) {
+            e.stopPropagation();
+            var touch = e.touches[0];
+            touchMoved = false;
+
+            if (State.connectingFromId) {
+                e.preventDefault();
+                if (State.connectingFromId !== div.id) {
+                    State.connections = State.connections.filter(function(c) {
+                        return !(c.from === State.connectingFromId && c.port === State.currentPort);
+                    });
+                    State.connections.push({ from: State.connectingFromId, to: div.id, port: State.currentPort });
+                }
+                State.connectingFromId = null;
+                Renderer.update();
+                return;
+            }
+
+            State.currentDrag = div;
+            var rect = div.getBoundingClientRect();
+            div.ox = touch.clientX - rect.left;
+            div.oy = touch.clientY - rect.top;
+
+            longPressTimer = setTimeout(function() {
+                if (!touchMoved) {
+                    State.currentDrag = null;
+                    if (navigator.vibrate) navigator.vibrate(40);
+                    UI.showContextMenu(touch.clientX, touch.clientY, div);
+                }
+            }, 500);
+        }, { passive: false });
+
+        div.addEventListener('touchmove', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            touchMoved = true;
+            clearTimeout(longPressTimer);
+            if (!State.currentDrag) return;
+            var touch = e.touches[0];
+            State.currentDrag.style.left = (touch.clientX - State.worldX - State.currentDrag.ox) + 'px';
+            State.currentDrag.style.top  = (touch.clientY - State.worldY - State.currentDrag.oy) + 'px';
+            if (!State.frameRequested) {
+                State.frameRequested = true;
+                requestAnimationFrame(function() { Renderer.update(); State.frameRequested = false; });
+            }
+        }, { passive: false });
+
+        div.addEventListener('touchend', function() {
+            clearTimeout(longPressTimer);
+            State.currentDrag = null;
+        });
     }
 };
 
@@ -177,6 +234,7 @@ const UI = {
     },
 
     init() {
+        // ── MOUSE: paneo y arrastre ──
         window.addEventListener('mousemove', function(e) {
             if (State.isPanning) {
                 State.worldX += e.movementX;
@@ -193,12 +251,40 @@ const UI = {
         });
 
         window.addEventListener('mouseup', function() {
-            State.isPanning  = false;
+            State.isPanning   = false;
             State.currentDrag = null;
         });
 
         document.getElementById('viewport').addEventListener('mousedown', function(e) {
             if (e.target.id === 'viewport') State.isPanning = true;
+        });
+
+        // ── TOUCH: paneo del lienzo con un dedo sobre el fondo ──
+        var panLastX = 0, panLastY = 0;
+
+        document.getElementById('viewport').addEventListener('touchstart', function(e) {
+            if (e.target.id !== 'viewport' && e.target.id !== 'world' && e.target.id !== 'svg-layer') return;
+            if (e.touches.length === 1) {
+                State.isPanning = true;
+                panLastX = e.touches[0].clientX;
+                panLastY = e.touches[0].clientY;
+            }
+        }, { passive: true });
+
+        document.getElementById('viewport').addEventListener('touchmove', function(e) {
+            if (!State.isPanning || e.touches.length !== 1) return;
+            e.preventDefault();
+            var dx = e.touches[0].clientX - panLastX;
+            var dy = e.touches[0].clientY - panLastY;
+            panLastX = e.touches[0].clientX;
+            panLastY = e.touches[0].clientY;
+            State.worldX += dx;
+            State.worldY += dy;
+            document.getElementById('world').style.transform = 'translate(' + State.worldX + 'px,' + State.worldY + 'px)';
+        }, { passive: false });
+
+        document.getElementById('viewport').addEventListener('touchend', function() {
+            State.isPanning = false;
         });
 
         document.getElementById('m-del').addEventListener('click', function(e) {
