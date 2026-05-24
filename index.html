@@ -42,6 +42,27 @@
         <div class="toolbar-sep"></div>
         <button id="btn-theme" title="Cambiar tema">&#9790;</button>
         <button id="btn-help" title="Ayuda">?</button>
+        <div class="toolbar-sep"></div>
+        <button id="btn-code" title="Panel de pseudocodigo">&lt;/&gt;</button>
+    </div>
+
+    <!-- PANEL PSEUDOCODIGO -->
+    <div id="code-panel">
+        <div id="code-panel-header">
+            <span id="code-panel-title">&lt;/&gt; Pseudocodigo</span>
+            <div id="code-panel-actions">
+                <button id="code-run-btn">&#9654; Ejecutar</button>
+                <button id="code-clear-btn">&#128465;</button>
+                <button id="code-close-btn">&#10005;</button>
+            </div>
+        </div>
+        <div id="code-speed-row">
+            <span class="code-speed-label">Vel.</span>
+            <input type="range" id="code-speed" min="300" max="2000" step="100" value="900">
+            <span id="code-speed-val">900ms</span>
+        </div>
+        <textarea id="code-input" spellcheck="false" placeholder="Ejemplos:&#10;p := q&#10;p := *q.prox&#10;*p.prox := q&#10;*p.prox := *q.prox&#10;*(*p.prox).ant := q"></textarea>
+        <div id="code-log"></div>
     </div>
 
     <div id="toast-container"></div>
@@ -56,6 +77,7 @@
         <div class="menu-item" id="m-con-next">Conectar</div>
         <div class="menu-item" id="m-con-prev">Conectar Anterior (Izquierda)</div>
         <div class="menu-item" id="m-ptr-advance">Avanzar al siguiente nodo</div>
+        <div class="menu-item" id="m-ptr-retreat">Avanzar al nodo anterior</div>
         <div class="menu-item" id="m-dis">Eliminar Salidas</div>
         <div class="menu-item" id="m-del">Eliminar Elemento</div>
     </div>

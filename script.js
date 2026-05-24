@@ -325,23 +325,45 @@ const UI = {
             e.stopPropagation();
             document.getElementById('context-menu').style.display = 'none';
 
-            // Buscar a qué nodo apunta actualmente el puntero (conexión next del puntero)
             var ptrConn = State.connections.find(function(c) {
                 return c.from === State.contextTargetId && c.port === 'next';
             });
             if (!ptrConn) return;
 
-            // Buscar la conexión next del nodo destino actual (el "siguiente")
             var nextConn = State.connections.find(function(c) {
                 return c.from === ptrConn.to && c.port === 'next';
             });
-            if (!nextConn) return; // no hay siguiente, no hacemos nada
+            if (!nextConn) return;
 
-            // Reemplazar: el puntero ahora apunta al siguiente nodo
+            // Reemplazar conexión: puntero → siguiente nodo
             State.connections = State.connections.filter(function(c) {
                 return !(c.from === State.contextTargetId && c.port === 'next');
             });
             State.connections.push({ from: State.contextTargetId, to: nextConn.to, port: 'next' });
+            Renderer.update();
+        });
+
+        document.getElementById('m-ptr-retreat').addEventListener('click', function(e) {
+            e.stopPropagation();
+            document.getElementById('context-menu').style.display = 'none';
+
+            // Buscar a qué nodo apunta el puntero actualmente
+            var ptrConn = State.connections.find(function(c) {
+                return c.from === State.contextTargetId && c.port === 'next';
+            });
+            if (!ptrConn) return;
+
+            // Buscar la conexión prev del nodo actual (nodo anterior)
+            var prevConn = State.connections.find(function(c) {
+                return c.from === ptrConn.to && c.port === 'prev';
+            });
+            if (!prevConn) return;
+
+            // Reemplazar conexión: puntero → nodo anterior
+            State.connections = State.connections.filter(function(c) {
+                return !(c.from === State.contextTargetId && c.port === 'next');
+            });
+            State.connections.push({ from: State.contextTargetId, to: prevConn.to, port: 'next' });
             Renderer.update();
         });
     },
@@ -379,22 +401,33 @@ const UI = {
                 var nextConn = State.connections.find(function(c) {
                     return c.from === ptrConn.to && c.port === 'next';
                 });
-                // Solo se puede avanzar si el siguiente no es NIL
-                if (nextConn && !document.getElementById(nextConn.to).classList.contains('nil-node')) {
-                    canAdvance = true;
-                }
+                if (nextConn) canAdvance = true;
             }
             btnAdvance.classList.toggle('disabled', !canAdvance);
+
+            // Verificar si hay un nodo anterior disponible (prev del nodo al que apunta)
+            var btnRetreat = document.getElementById('m-ptr-retreat');
+            var canRetreat = false;
+            if (ptrConn) {
+                var prevConn = State.connections.find(function(c) {
+                    return c.from === ptrConn.to && c.port === 'prev';
+                });
+                if (prevConn) canRetreat = true;
+            }
+            btnRetreat.style.display = 'block';
+            btnRetreat.classList.toggle('disabled', !canRetreat);
 
         } else if (isNil) {
             btnNext.style.display    = 'none';
             btnDis.style.display     = 'none';
             btnAdvance.style.display = 'none';
+            document.getElementById('m-ptr-retreat').style.display = 'none';
         } else {
             btnNext.textContent      = 'Conectar Proximo (Derecha)';
             btnNext.style.display    = 'block';
             btnDis.style.display     = 'block';
             btnAdvance.style.display = 'none';
+            document.getElementById('m-ptr-retreat').style.display = 'none';
         }
         document.getElementById('m-del').textContent = 'Eliminar Elemento';
         document.getElementById('m-con-prev').style.display = isDouble ? 'block' : 'none';
@@ -535,6 +568,25 @@ const Tutorial = {
             }
         },
         {
+            title: 'Panel de Pseudocodigo',
+            desc: 'El boton <strong>&lt;/&gt;</strong> abre un panel donde podes escribir asignaciones de punteros que se ejecutan paso a paso sobre el lienzo.<br><br>Solo se pueden usar <strong>nombres de punteros</strong> y <strong>nil</strong> como identificadores.',
+            visual: function() {
+                return '<div style="display:flex;flex-direction:column;gap:8px;width:100%;font-family:monospace;font-size:13px;">'
+                     + '<div style="background:var(--input-bg);border:1px solid var(--input-border);border-radius:8px;padding:10px 14px;color:var(--input-color);line-height:2;">'
+                     + '<div><span style="opacity:0.4;">// mover el puntero p</span></div>'
+                     + '<div>p := q</div>'
+                     + '<div>p := *q.prox</div>'
+                     + '<div><span style="opacity:0.4;">// modificar conexion de un nodo</span></div>'
+                     + '<div>*p.prox := q</div>'
+                     + '<div>*p.prox := nil</div>'
+                     + '<div>*p.ant := *q.prox</div>'
+                     + '<div>*(*p.prox).ant := q</div>'
+                     + '</div>'
+                     + '<div style="font-size:11px;color:var(--text-color);opacity:0.45;text-align:center;">Las lineas se ejecutan en orden con un delay visible</div>'
+                     + '</div>';
+            }
+        },
+        {
             title: 'Listo para empezar!',
             desc: 'Ya sabes todo lo necesario. Podes consultar esta guia en cualquier momento con el boton <strong>?</strong> en la barra.<br><br>Elegi un modo y empieza a construir.',
             visual: function() {
@@ -593,6 +645,253 @@ const Tutorial = {
     }
 };
 
+
+/**
+ * ============================================================
+ * INTÉRPRETE DE PSEUDOCÓDIGO — semántica de punteros
+ *
+ * Tipos de expresión (lado derecho / resolución de valor):
+ *   nombre          → el nodo al que apunta ese puntero
+ *   *nombre.prox    → el nodo al que lleva .prox del nodo apuntado por nombre
+ *   *(*p.prox).ant  → anidamiento arbitrario
+ *
+ * Tipos de asignación (lado izquierdo):
+ *   p := rhs        → el puntero p pasa a apuntar al nodo resuelto por rhs
+ *   *p.prox := rhs  → la conexión .prox del nodo *p ahora apunta al nodo de rhs
+ * ============================================================
+ */
+const CodePanel = {
+    running: false,
+
+    // ── Mapa nombre→id de todos los elementos con etiqueta visible ──
+    _buildNameMap: function() {
+        var map = {};
+        document.querySelectorAll('.element').forEach(function(el) {
+            // Solo se registran punteros (ptr-circle) y NIL (nil-node)
+            // Los nodos de datos no son válidos como nombres en el panel
+            if (el.classList.contains('ptr-circle')) {
+                var label = el.textContent.trim();
+                if (label) map[label] = el.id;
+            } else if (el.classList.contains('nil-node')) {
+                // NIL se registra con la clave especial "nil" (case-insensitive)
+                map['nil'] = el.id;
+                map['Nil'] = el.id;
+                map['NIL'] = el.id;
+            }
+        });
+        return map;
+    },
+
+    // ── Resuelve una expresión al ID del nodo DESTINO ──
+    // Casos:
+    //   "p"            → ID del nodo al que apunta el puntero p
+    //   "*p.prox"      → ID del nodo al que lleva .prox del nodo *p
+    //   "*(*p.prox).ant" → anidado
+    _resolveToNode: function(expr, nameMap) {
+        expr = expr.trim();
+
+        if (!expr.startsWith('*')) {
+            var id = nameMap[expr];
+            if (!id) throw new Error('No se encontro "' + expr + '" en el lienzo. Solo se pueden usar nombres de punteros o "nil"');
+            var el = document.getElementById(id);
+            if (!el) throw new Error('Elemento "' + expr + '" no existe en el DOM');
+
+            // NIL: se devuelve directamente como destino (no se desreferencia)
+            if (el.classList.contains('nil-node')) return id;
+
+            // Puntero: devolver el nodo al que apunta
+            if (el.classList.contains('ptr-circle')) {
+                var conn = State.connections.find(function(c) {
+                    return c.from === id && c.port === 'next';
+                });
+                if (!conn) throw new Error('El puntero "' + expr + '" no apunta a ningun nodo');
+                return conn.to;
+            }
+
+            throw new Error('"' + expr + '" no es un puntero ni NIL. Solo se pueden usar punteros como nombres');
+        }
+
+        // Expresión desreferenciada: *base.campo
+        var inner = expr.slice(1).trim();
+
+        // Separar base.campo respetando paréntesis anidados
+        var dotIdx = -1, depth = 0;
+        for (var i = inner.length - 1; i >= 0; i--) {
+            if (inner[i] === ')') depth++;
+            else if (inner[i] === '(') depth--;
+            else if (inner[i] === '.' && depth === 0) { dotIdx = i; break; }
+        }
+        if (dotIdx === -1) throw new Error('Expresion mal formada (falta .campo): ' + expr);
+
+        var baseExpr  = inner.slice(0, dotIdx).trim();
+        var fieldName = inner.slice(dotIdx + 1).trim().toLowerCase();
+        if (baseExpr.startsWith('(') && baseExpr.endsWith(')')) {
+            baseExpr = baseExpr.slice(1, -1).trim();
+        }
+
+        var port = (fieldName === 'prox' || fieldName === 'next') ? 'next' : 'prev';
+
+        // Resolver base → ID del nodo cuya conexión seguimos
+        var baseNodeId = CodePanel._resolveToNode(baseExpr, nameMap);
+
+        var conn = State.connections.find(function(c) {
+            return c.from === baseNodeId && c.port === port;
+        });
+        if (!conn) throw new Error('"' + baseExpr + '" no tiene conexion .' + fieldName);
+        return conn.to;
+    },
+
+    // ── Parsea y ejecuta UNA línea ──
+    _executeLine: function(line, nameMap) {
+        line = line.trim();
+        if (!line || line.startsWith('//') || line.startsWith('{')) return;
+
+        var parts = line.split(':=');
+        if (parts.length !== 2) throw new Error('Se esperaba ":=" en: ' + line);
+
+        var lhsRaw = parts[0].trim();
+        var rhsRaw = parts[1].trim();
+
+        // Resolver RHS → ID del nodo destino
+        var toId = CodePanel._resolveToNode(rhsRaw, nameMap);
+
+        if (!lhsRaw.startsWith('*')) {
+            // ── CASO 1: p := rhs  →  mover el puntero p para que apunte a toId ──
+            var ptrId = nameMap[lhsRaw];
+            if (!ptrId) throw new Error('No se encontro el puntero "' + lhsRaw + '"');
+            var el = document.getElementById(ptrId);
+            if (!el || !el.classList.contains('ptr-circle')) {
+                throw new Error('"' + lhsRaw + '" no es un puntero');
+            }
+            // Reemplazar la conexión next del puntero
+            State.connections = State.connections.filter(function(c) {
+                return !(c.from === ptrId && c.port === 'next');
+            });
+            State.connections.push({ from: ptrId, to: toId, port: 'next' });
+
+        } else {
+            // ── CASO 2: *expr.campo := rhs  →  modificar conexión del nodo *expr ──
+            var inner = lhsRaw.slice(1).trim();
+
+            var dotIdx = -1, depth = 0;
+            for (var i = inner.length - 1; i >= 0; i--) {
+                if (inner[i] === ')') depth++;
+                else if (inner[i] === '(') depth--;
+                else if (inner[i] === '.' && depth === 0) { dotIdx = i; break; }
+            }
+            if (dotIdx === -1) throw new Error('El LHS no tiene campo (.prox/.ant): ' + lhsRaw);
+
+            var baseExpr  = inner.slice(0, dotIdx).trim();
+            var fieldName = inner.slice(dotIdx + 1).trim().toLowerCase();
+            if (baseExpr.startsWith('(') && baseExpr.endsWith(')')) {
+                baseExpr = baseExpr.slice(1, -1).trim();
+            }
+
+            var port = (fieldName === 'prox' || fieldName === 'next') ? 'next' : 'prev';
+
+            // Resolver base → nodo cuya conexión modificamos
+            var fromId = CodePanel._resolveToNode(baseExpr, nameMap);
+
+            // NIL no puede tener conexiones salientes
+            var fromEl = document.getElementById(fromId);
+            if (fromEl && fromEl.classList.contains('nil-node')) {
+                throw new Error('NIL no puede tener conexiones salientes');
+            }
+
+            State.connections = State.connections.filter(function(c) {
+                return !(c.from === fromId && c.port === port);
+            });
+            State.connections.push({ from: fromId, to: toId, port: port });
+        }
+
+        Renderer.update();
+    },
+
+    // ── Ejecuta todas las líneas con delay animado ──
+    run: async function() {
+        if (CodePanel.running) return;
+
+        var raw   = document.getElementById('code-input').value;
+        var lines = raw.split('\n').map(function(l) { return l.trim(); }).filter(function(l) {
+            return l && !l.startsWith('//') && !l.startsWith('{');
+        });
+        if (lines.length === 0) return;
+
+        var log = document.getElementById('code-log');
+        log.innerHTML = '';
+
+        var logRows = lines.map(function(line) {
+            var div = document.createElement('div');
+            div.className = 'code-log-line';
+            div.textContent = line;
+            log.appendChild(div);
+            return div;
+        });
+
+        CodePanel.running = true;
+        document.getElementById('code-run-btn').disabled = true;
+
+        var nameMap = CodePanel._buildNameMap();
+
+        for (var i = 0; i < lines.length; i++) {
+            var delay = parseInt(document.getElementById('code-speed').value, 10);
+
+            logRows[i].classList.add('executing');
+            log.scrollTop = logRows[i].offsetTop;
+
+            await new Promise(function(r) { setTimeout(r, delay); });
+
+            try {
+                CodePanel._executeLine(lines[i], nameMap);
+                logRows[i].classList.remove('executing');
+                logRows[i].classList.add('done');
+                nameMap = CodePanel._buildNameMap();
+            } catch(err) {
+                logRows[i].classList.remove('executing');
+                logRows[i].classList.add('error');
+                logRows[i].textContent = '\u2717 ' + lines[i] + '  \u2192  ' + err.message;
+                break;
+            }
+
+            await new Promise(function(r) { setTimeout(r, delay * 0.2); });
+        }
+
+        CodePanel.running = false;
+        document.getElementById('code-run-btn').disabled = false;
+    },
+
+    open:   function() { document.getElementById('code-panel').classList.add('open'); },
+    close:  function() { document.getElementById('code-panel').classList.remove('open'); },
+    toggle: function() { document.getElementById('code-panel').classList.toggle('open'); },
+
+    // ── Panel arrastrable desde el header ──
+    initDrag: function() {
+        var panel  = document.getElementById('code-panel');
+        var header = document.getElementById('code-panel-header');
+        var dragX = 0, dragY = 0, startR = 0, startB = 0, dragging = false;
+
+        header.addEventListener('mousedown', function(e) {
+            if (e.target.tagName === 'BUTTON') return;
+            dragging = true;
+            dragX = e.clientX; dragY = e.clientY;
+            var rect = panel.getBoundingClientRect();
+            startR = window.innerWidth  - rect.right;
+            startB = window.innerHeight - rect.bottom;
+            e.preventDefault();
+        });
+
+        window.addEventListener('mousemove', function(e) {
+            if (!dragging) return;
+            panel.style.right  = Math.max(0, startR + (dragX - e.clientX)) + 'px';
+            panel.style.bottom = Math.max(0, startB + (dragY - e.clientY)) + 'px';
+            panel.style.left = 'auto';
+            panel.style.top  = 'auto';
+        });
+
+        window.addEventListener('mouseup', function() { dragging = false; });
+    }
+};
+
 /**
  * INICIALIZACIÓN — todo arranca aquí, sin depender del orden de carga
  */
@@ -617,6 +916,19 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('tut-overlay').addEventListener('click', function(e) {
         if (e.target.id === 'tut-overlay') Tutorial.close();
     });
+
+    // Panel de pseudocódigo
+    document.getElementById('btn-code').addEventListener('click', function() { CodePanel.toggle(); });
+    document.getElementById('code-run-btn').addEventListener('click', function() { CodePanel.run(); });
+    document.getElementById('code-close-btn').addEventListener('click', function() { CodePanel.close(); });
+    document.getElementById('code-clear-btn').addEventListener('click', function() {
+        document.getElementById('code-input').value = '';
+        document.getElementById('code-log').innerHTML = '';
+    });
+    document.getElementById('code-speed').addEventListener('input', function() {
+        document.getElementById('code-speed-val').textContent = this.value + 'ms';
+    });
+    CodePanel.initDrag();
 
     // Cierre del menú contextual al hacer clic fuera
     document.addEventListener('click', function(e) {
