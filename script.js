@@ -581,6 +581,8 @@ const Tutorial = {
                      + '<div>*p.prox := nil</div>'
                      + '<div>*p.ant := *q.prox</div>'
                      + '<div>*(*p.prox).ant := q</div>'
+                     + '<div><span style="opacity:0.4;">// eliminar el nodo apuntado</span></div>'
+                     + '<div>disponer(p)</div>'
                      + '</div>'
                      + '<div style="font-size:11px;color:var(--text-color);opacity:0.45;text-align:center;">Las lineas se ejecutan en orden con un delay visible</div>'
                      + '</div>';
@@ -745,6 +747,37 @@ const CodePanel = {
     _executeLine: function(line, nameMap) {
         line = line.trim();
         if (!line || line.startsWith('//') || line.startsWith('{')) return;
+
+        // ── CASO: disponer(p) o disponer p ──
+        var disponerMatch = line.match(/^disponer\s*\(?\s*(\w+)\s*\)?$/i);
+        if (disponerMatch) {
+            var ptrName = disponerMatch[1].trim();
+            var ptrId   = nameMap[ptrName];
+            if (!ptrId) throw new Error('No se encontro el puntero "' + ptrName + '"');
+            var ptrEl = document.getElementById(ptrId);
+            if (!ptrEl || !ptrEl.classList.contains('ptr-circle')) {
+                throw new Error('"' + ptrName + '" no es un puntero');
+            }
+            // Obtener el nodo al que apunta
+            var conn = State.connections.find(function(c) {
+                return c.from === ptrId && c.port === 'next';
+            });
+            if (!conn) throw new Error('El puntero "' + ptrName + '" no apunta a ningun nodo');
+            var nodeId = conn.to;
+            var nodeEl = document.getElementById(nodeId);
+            if (!nodeEl) throw new Error('El nodo destino no existe en el DOM');
+            if (nodeEl.classList.contains('nil-node')) {
+                throw new Error('No se puede disponer NIL');
+            }
+            // Eliminar todas las conexiones que involucran al nodo
+            State.connections = State.connections.filter(function(c) {
+                return c.from !== nodeId && c.to !== nodeId;
+            });
+            // Eliminar el nodo del DOM
+            nodeEl.remove();
+            Renderer.update();
+            return;
+        }
 
         var parts = line.split(':=');
         if (parts.length !== 2) throw new Error('Se esperaba ":=" en: ' + line);
